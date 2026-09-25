@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Control de Asistencia</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="contenedor">
+
+        <!-- ENCABEZADO -->
+
+        <div class="encabezado">
+
+            <h1>CONTROL DE ASISTENCIA</h1>
+
+            <p class="empresa">
+                PEPPERS CHICKEN
+            </p>
+
+            <div id="reloj">
+                00:00:00
+            </div>
+
+            <div id="fecha">
+                Cargando fecha...
+            </div>
+
+        </div>
+
+
+        <!-- DNI -->
+
+        <div class="seccion-dni">
+
+            <label>
+                INGRESE SU DNI
+            </label>
+
+            <input
+                type="text"
+                id="dni"
+                placeholder="--------"
+                maxlength="8"
+                readonly
+            >
+
+        </div>
+
+
+        <!-- INFORMACIÓN DEL TRABAJADOR -->
+
+        <div
+            id="trabajadorInfo"
+            class="trabajador-info">
+        </div>
+
+
+        <!-- TECLADO TÁCTIL -->
+
+        <div class="teclado">
+
+            <button class="numero" data-numero="1">
+                1
+            </button>
+
+            <button class="numero" data-numero="2">
+                2
+            </button>
+
+            <button class="numero" data-numero="3">
+                3
+            </button>
+
+
+            <button class="numero" data-numero="4">
+                4
+            </button>
+
+            <button class="numero" data-numero="5">
+                5
+            </button>
+
+            <button class="numero" data-numero="6">
+                6
+            </button>
+
+
+            <button class="numero" data-numero="7">
+                7
+            </button>
+
+            <button class="numero" data-numero="8">
+                8
+            </button>
+
+            <button class="numero" data-numero="9">
+                9
+            </button>
+
+
+            <button
+                class="borrar"
+                id="btnBorrar">
+                ⌫
+            </button>
+
+            <button
+                class="numero"
+                data-numero="0">
+                0
+            </button>
+
+            <button
+                class="limpiar"
+                id="btnLimpiar">
+                C
+            </button>
+
+        </div>
+
+
+        <!-- BOTONES DE MARCACIÓN -->
+
+        <div class="botones">
+
+            <button id="btnEntrada">
+                ✓ ENTRADA
+            </button>
+
+            <button id="btnSalida">
+                ↪ SALIDA
+            </button>
+
+        </div>
+
+
+        <!-- MENSAJE -->
+
+        <div id="mensaje"></div>
+
+    </div>
+
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

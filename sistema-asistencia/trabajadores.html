@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Trabajadores - Peppers Chicken</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background: #c9151e;
+
+            min-height: 100vh;
+
+            padding: 30px;
+
+        }
+
+        .contenedor {
+
+            max-width: 900px;
+
+            margin: auto;
+
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 15px 40px
+                rgba(0, 0, 0, 0.25);
+
+        }
+
+        .encabezado {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+
+        }
+
+        .encabezado h1 {
+
+            font-size: 32px;
+
+            color: #222;
+
+            margin-bottom: 8px;
+
+        }
+
+        .encabezado p {
+
+            color: #c9151e;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+        }
+
+        .formulario {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 20px;
+
+        }
+
+        .campo {
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+        .campo.completo {
+
+            grid-column: 1 / -1;
+
+        }
+
+        label {
+
+            font-weight: bold;
+
+            color: #333;
+
+            margin-bottom: 8px;
+
+        }
+
+        input,
+        select {
+
+            width: 100%;
+
+            height: 50px;
+
+            border: 2px solid #ccc;
+
+            border-radius: 10px;
+
+            padding: 10px;
+
+            font-size: 16px;
+
+        }
+
+        input:focus,
+        select:focus {
+
+            outline: none;
+
+            border-color: #c9151e;
+
+        }
+
+        .botones {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 15px;
+
+            margin-top: 25px;
+
+        }
+
+        button {
+
+            height: 55px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            color: white;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+        #btnGuardar {
+
+            background: #16a34a;
+
+        }
+
+        #btnLimpiar {
+
+            background: #777;
+
+        }
+
+        #mensaje {
+
+            text-align: center;
+
+            min-height: 25px;
+
+            margin-top: 20px;
+
+            font-weight: bold;
+
+        }
+
+        .lista {
+
+            margin-top: 40px;
+
+        }
+
+        .lista h2 {
+
+            margin-bottom: 15px;
+
+            color: #222;
+
+        }
+
+        .trabajador {
+
+            border: 1px solid #ddd;
+
+            border-radius: 12px;
+
+            padding: 15px;
+
+            margin-bottom: 10px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 15px;
+
+        }
+
+        .datos {
+
+            flex: 1;
+
+        }
+
+        .nombre {
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            color: #c9151e;
+
+            margin-bottom: 5px;
+
+        }
+
+        .detalle {
+
+            color: #555;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+
+        }
+
+        .estado {
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+        }
+
+        .activo {
+
+            color: #16a34a;
+
+        }
+
+        .inactivo {
+
+            color: #dc2626;
+
+        }
+
+        .boton-editar {
+
+            background: #2563eb;
+
+            padding: 10px 15px;
+
+            height: auto;
+
+            font-size: 14px;
+
+        }
+
+        @media (max-width: 700px) {
+
+            .formulario {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .campo.completo {
+
+                grid-column: auto;
+
+            }
+
+            .trabajador {
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+            }
+
+            .botones {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            body {
+
+                padding: 15px;
+
+            }
+
+            .contenedor {
+
+                padding: 20px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="contenedor">
+
+
+        <!-- ========================================= -->
+        <!-- ENCABEZADO -->
+        <!-- ========================================= -->
+
+        <div class="encabezado">
+
+            <h1>
+                GESTIÓN DE TRABAJADORES
+            </h1>
+
+            <p>
+                PEPPERS CHICKEN
+            </p>
+
+        </div>
+
+
+        <!-- ========================================= -->
+        <!-- FORMULARIO -->
+        <!-- ========================================= -->
+
+        <div class="formulario">
+
+
+            <!-- DNI -->
+
+            <div class="campo">
+
+                <label for="dni">
+                    DNI
+                </label>
+
+                <input
+                    type="text"
+                    id="dni"
+                    maxlength="8"
+                    placeholder="Ingrese DNI"
+                >
+
+            </div>
+
+
+            <!-- NOMBRE -->
+
+            <div class="campo">
+
+                <label for="nombre">
+                    Nombres
+                </label>
+
+                <input
+                    type="text"
+                    id="nombre"
+                    placeholder="Ingrese nombres"
+                >
+
+            </div>
+
+
+            <!-- APELLIDOS -->
+
+            <div class="campo">
+
+                <label for="apellidos">
+                    Apellidos
+                </label>
+
+                <input
+                    type="text"
+                    id="apellidos"
+                    placeholder="Ingrese apellidos"
+                >
+
+            </div>
+
+
+            <!-- ÁREA -->
+
+            <div class="campo">
+
+                <label for="area">
+                    Área
+                </label>
+
+                <input
+                    type="text"
+                    id="area"
+                    placeholder="Ejemplo: Cocina"
+                >
+
+            </div>
+
+
+            <!-- CARGO -->
+
+            <div class="campo">
+
+                <label for="cargo">
+                    Cargo
+                </label>
+
+                <input
+                    type="text"
+                    id="cargo"
+                    placeholder="Ejemplo: Atención"
+                >
+
+            </div>
+
+
+            <!-- ESTADO -->
+
+            <div class="campo">
+
+                <label for="activo">
+                    Estado
+                </label>
+
+                <select id="activo">
+
+                    <option value="true">
+                        Activo
+                    </option>
+
+                    <option value="false">
+                        Inactivo
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- ========================================= -->
+        <!-- BOTONES -->
+        <!-- ========================================= -->
+
+        <div class="botones">
+
+            <button id="btnGuardar">
+
+                💾 GUARDAR TRABAJADOR
+
+            </button>
+
+            <button id="btnLimpiar">
+
+                🧹 LIMPIAR
+
+            </button>
+
+        </div>
+
+
+        <!-- ========================================= -->
+        <!-- MENSAJE -->
+        <!-- ========================================= -->
+
+        <div id="mensaje"></div>
+
+
+        <!-- ========================================= -->
+        <!-- LISTA -->
+        <!-- ========================================= -->
+
+        <div class="lista">
+
+            <h2>
+                Trabajadores registrados
+            </h2>
+
+            <div id="listaTrabajadores">
+
+                Cargando trabajadores...
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <script src="trabajadores.js"></script>
+
+</body>
+
+</html>
