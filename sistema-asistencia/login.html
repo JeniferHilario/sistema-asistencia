@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Acceso Administrativo - Peppers Chicken</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #b00000;
+            padding: 20px;
+        }
+
+        .login {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+
+        h1 {
+            text-align: center;
+            color: #b00000;
+            margin-bottom: 5px;
+        }
+
+        .empresa {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 18px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #b00000;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #8e0000;
+        }
+
+        #mensaje {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login">
+
+        <h1>🔐</h1>
+
+        <h1>ADMINISTRACIÓN</h1>
+
+        <div class="empresa">
+            PEPPERS CHICKEN
+        </div>
+
+        <label>Usuario</label>
+
+        <input
+            type="text"
+            id="usuario"
+            placeholder="Ingrese su usuario"
+        >
+
+        <label>Contraseña</label>
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Ingrese su contraseña"
+        >
+
+        <button onclick="iniciarSesion()">
+            INGRESAR
+        </button>
+
+        <div id="mensaje"></div>
+
+    </div>
+
+
+    <script>
+
+        const SUPABASE_URL =
+            "https://aoyzlskorbbloxppwmhs.supabase.co";
+
+        const SUPABASE_KEY =
+            "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
+
+
+        async function iniciarSesion() {
+
+            const usuario =
+                document.getElementById("usuario").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+            const mensaje =
+                document.getElementById("mensaje");
+
+
+            if (!usuario || !password) {
+
+                mensaje.textContent =
+                    "Ingrese usuario y contraseña.";
+
+                mensaje.style.color = "red";
+
+                return;
+            }
+
+
+            try {
+
+                const respuesta = await fetch(
+
+                    `${SUPABASE_URL}/rest/v1/rpc/iniciar_sesion_admin`,
+
+                    {
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json",
+
+                            "apikey":
+                                SUPABASE_KEY,
+
+                            "Authorization":
+                                `Bearer ${SUPABASE_KEY}`
+
+                        },
+
+                        body: JSON.stringify({
+
+                            p_usuario: usuario,
+
+                            p_password: password
+
+                        })
+
+                    }
+
+                );
+
+
+                const resultado =
+                    await respuesta.json();
+
+
+                if (!respuesta.ok) {
+
+                    throw new Error(
+                        "Error de conexión con Supabase."
+                    );
+
+                }
+
+
+                if (resultado.ok === true) {
+
+                    sessionStorage.setItem(
+                        "adminAutorizado",
+                        "true"
+                    );
+
+                    sessionStorage.setItem(
+                        "adminUsuario",
+                        resultado.usuario
+                    );
+
+                    window.location.href =
+                        "admin.html";
+
+                } else {
+
+                    mensaje.textContent =
+                        resultado.mensaje ||
+                        "Usuario o contraseña incorrectos.";
+
+                    mensaje.style.color = "red";
+
+                }
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                mensaje.textContent =
+                    "No se pudo conectar con el sistema.";
+
+                mensaje.style.color = "red";
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
