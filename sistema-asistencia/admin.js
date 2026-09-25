@@ -1,3 +1,8 @@
+// VERIFICAR ACCESO ADMINISTRATIVO
+
+if (sessionStorage.getItem("adminAutorizado") !== "true") {
+    window.location.href = "login.html";
+}
 const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
 const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 
