@@ -98,7 +98,7 @@ function programarLimpieza() {
 
     }
 
-    console.log("La pantalla se limpiará en 3 segundos...");
+    console.log("La pantalla se limpiará en 6 segundos...");
 
     temporizadorLimpieza = setTimeout(function () {
 
@@ -106,9 +106,11 @@ function programarLimpieza() {
 
         temporizadorLimpieza = null;
 
-        console.log("Pantalla limpia. Lista para el siguiente trabajador.");
+        console.log(
+            "Pantalla limpia. Lista para el siguiente trabajador."
+        );
 
-    }, 3000);
+    }, 6000);
 
 }
 
@@ -348,7 +350,70 @@ async function consultarTrabajador() {
 
 
 // ======================================================
-// REGISTRAR MARCACIÓN
+// OBTENER UBICACIÓN
+// ======================================================
+
+function obtenerUbicacion() {
+
+    return new Promise(function (resolve, reject) {
+
+        if (!navigator.geolocation) {
+
+            reject(
+                new Error(
+                    "Este dispositivo no permite obtener ubicación."
+                )
+            );
+
+            return;
+
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            function (posicion) {
+
+                resolve({
+
+                    latitud:
+                        posicion.coords.latitude,
+
+                    longitud:
+                        posicion.coords.longitude,
+
+                    precision:
+                        posicion.coords.accuracy
+
+                });
+
+            },
+
+            function (error) {
+
+                console.error(
+                    "Error de ubicación:",
+                    error
+                );
+
+                reject(error);
+
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+
+        );
+
+    });
+
+}
+
+
+// ======================================================
+// REGISTRAR MARCACIÓN CON UBICACIÓN
 // ======================================================
 
 async function registrarMarcacion(tipo) {
@@ -398,13 +463,35 @@ async function registrarMarcacion(tipo) {
 
 
     mensaje.textContent =
-        "⏳ Registrando...";
+        "📍 Obteniendo ubicación...";
 
 
     try {
 
+        // ==================================================
+        // OBTENER UBICACIÓN
+        // ==================================================
+
+        const ubicacion =
+            await obtenerUbicacion();
+
+
+        console.log(
+            "Ubicación obtenida:",
+            ubicacion
+        );
+
+
+        // ==================================================
+        // REGISTRAR EN SUPABASE
+        // ==================================================
+
+        mensaje.textContent =
+            "⏳ Registrando marcación...";
+
+
         const respuesta = await fetch(
-            `${SUPABASE_URL}/rest/v1/rpc/registrar_marcacion`,
+            `${SUPABASE_URL}/rest/v1/rpc/registrar_marcacion_con_ubicacion`,
             {
                 method: "POST",
 
@@ -415,9 +502,24 @@ async function registrarMarcacion(tipo) {
                 },
 
                 body: JSON.stringify({
-                    p_dni: dni,
-                    p_tipo: tipo
+
+                    p_dni:
+                        dni,
+
+                    p_tipo:
+                        tipo,
+
+                    p_latitud:
+                        ubicacion.latitud,
+
+                    p_longitud:
+                        ubicacion.longitud,
+
+                    p_precision:
+                        ubicacion.precision
+
                 })
+
             }
         );
 
@@ -438,8 +540,16 @@ async function registrarMarcacion(tipo) {
 
         if (!respuesta.ok) {
 
+            console.error(
+                "Error Supabase:",
+                resultado
+            );
+
             mensaje.textContent =
                 "❌ Error al registrar.";
+
+            btnEntrada.disabled = false;
+            btnSalida.disabled = false;
 
             programarLimpieza();
 
@@ -454,21 +564,9 @@ async function registrarMarcacion(tipo) {
 
         if (resultado.ok) {
 
-            if (tipo === "ENTRADA") {
+            mensaje.textContent =
+                `✅ ${resultado.mensaje}`;
 
-                mensaje.textContent =
-                    `✅ ${resultado.mensaje}`;
-
-            }
-
-            else {
-
-                mensaje.textContent =
-                    `✅ ${resultado.mensaje}`;
-
-            }
-
-            // Limpiar automáticamente
             programarLimpieza();
 
         }
@@ -483,19 +581,56 @@ async function registrarMarcacion(tipo) {
             mensaje.textContent =
                 `⚠️ ${resultado.mensaje}`;
 
-            // También limpiar automáticamente
+            btnEntrada.disabled = false;
+            btnSalida.disabled = false;
+
             programarLimpieza();
 
         }
 
     }
 
+
+    // ==================================================
+    // ERROR DE UBICACIÓN / CONEXIÓN
+    // ==================================================
+
     catch (error) {
 
         console.error(error);
 
-        mensaje.textContent =
-            "❌ No se pudo conectar con el sistema.";
+
+        if (error.code === 1) {
+
+            mensaje.textContent =
+                "📍 Debe permitir el acceso a la ubicación para marcar.";
+
+        }
+
+        else if (error.code === 2) {
+
+            mensaje.textContent =
+                "📍 No se pudo obtener su ubicación.";
+
+        }
+
+        else if (error.code === 3) {
+
+            mensaje.textContent =
+                "📍 La ubicación tardó demasiado. Intente nuevamente.";
+
+        }
+
+        else {
+
+            mensaje.textContent =
+                "❌ No se pudo registrar la marcación.";
+
+        }
+
+
+        btnEntrada.disabled = false;
+        btnSalida.disabled = false;
 
         programarLimpieza();
 
