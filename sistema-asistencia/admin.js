@@ -969,3 +969,422 @@ document.addEventListener(
 
     }
 );
+// ==========================================
+// USUARIOS ADMINISTRADORES
+// ==========================================
+
+async function cargarUsuariosAdmin() {
+
+    const lista =
+        document.getElementById("listaUsuariosAdmin");
+
+    if (!lista) return;
+
+    lista.innerHTML = `
+        <tr>
+            <td colspan="5">
+                Cargando usuarios...
+            </td>
+        </tr>
+    `;
+
+    try {
+
+        const resultado =
+            await llamarSupabase(
+                "listar_usuarios_admin",
+                {}
+            );
+
+        console.log(
+            "Usuarios recibidos:",
+            resultado
+        );
+
+        if (!resultado) {
+
+            throw new Error(
+                "No se recibieron datos."
+            );
+
+        }
+
+        lista.innerHTML = "";
+
+        if (resultado.length === 0) {
+
+            lista.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        No hay usuarios registrados.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        resultado.forEach(function(usuario) {
+
+            const fila =
+                document.createElement("tr");
+
+            const estado =
+                usuario.activo === true
+                    ? "Activo"
+                    : "Inactivo";
+
+            const claseEstado =
+                usuario.activo === true
+                    ? "estado-activo"
+                    : "estado-inactivo";
+
+            const textoBoton =
+                usuario.activo === true
+                    ? "DESACTIVAR"
+                    : "ACTIVAR";
+
+            const claseBoton =
+                usuario.activo === true
+                    ? "btn-inactivo"
+                    : "btn-activo";
+
+            fila.innerHTML = `
+
+                <td>
+                    ${usuario.usuario || ""}
+                </td>
+
+                <td>
+                    ${usuario.nombre || ""}
+                </td>
+
+                <td>
+                    ${usuario.rol || ""}
+                </td>
+
+                <td class="${claseEstado}">
+                    ${estado}
+                </td>
+
+                <td>
+
+                    <button
+                        class="btn-estado ${claseBoton}"
+                        onclick="cambiarEstadoUsuario(
+                            '${usuario.id}',
+                            ${usuario.activo}
+                        )">
+
+                        ${textoBoton}
+
+                    </button>
+
+                </td>
+
+            `;
+
+            lista.appendChild(fila);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando usuarios:",
+            error
+        );
+
+        lista.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    Error al cargar los usuarios.
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+// ==========================================
+// CREAR USUARIO
+// ==========================================
+
+async function crearUsuarioAdmin() {
+
+    const usuario =
+        document
+            .getElementById("nuevoUsuarioAdmin")
+            .value
+            .trim();
+
+    const nombre =
+        document
+            .getElementById("nuevoNombreAdmin")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("nuevaPasswordAdmin")
+            .value
+            .trim();
+
+    const rol =
+        document
+            .getElementById("nuevoRolAdmin")
+            .value;
+
+    const mensaje =
+        document.getElementById(
+            "mensajeUsuario"
+        );
+
+
+    if (!usuario) {
+
+        mensaje.innerHTML =
+            "Ingrese un usuario.";
+
+        mensaje.style.background =
+            "#f8d7da";
+
+        mensaje.style.color =
+            "#721c24";
+
+        return;
+    }
+
+
+    if (!nombre) {
+
+        mensaje.innerHTML =
+            "Ingrese el nombre completo.";
+
+        mensaje.style.background =
+            "#f8d7da";
+
+        mensaje.style.color =
+            "#721c24";
+
+        return;
+    }
+
+
+    if (!password) {
+
+        mensaje.innerHTML =
+            "Ingrese una contraseña.";
+
+        mensaje.style.background =
+            "#f8d7da";
+
+        mensaje.style.color =
+            "#721c24";
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        mensaje.innerHTML =
+            "La contraseña debe tener mínimo 6 caracteres.";
+
+        mensaje.style.background =
+            "#f8d7da";
+
+        mensaje.style.color =
+            "#721c24";
+
+        return;
+    }
+
+
+    try {
+
+        const resultado =
+            await llamarSupabase(
+                "crear_usuario_admin",
+                {
+                    p_usuario: usuario,
+                    p_password: password,
+                    p_nombre: nombre,
+                    p_rol: rol
+                }
+            );
+
+
+        console.log(
+            "Resultado crear usuario:",
+            resultado
+        );
+
+
+        if (!resultado || resultado.ok !== true) {
+
+            throw new Error(
+                resultado?.mensaje ||
+                "No se pudo crear el usuario."
+            );
+
+        }
+
+
+        mensaje.innerHTML =
+            "✓ Usuario creado correctamente.";
+
+        mensaje.style.background =
+            "#d4edda";
+
+        mensaje.style.color =
+            "#155724";
+
+
+        document
+            .getElementById("nuevoUsuarioAdmin")
+            .value = "";
+
+        document
+            .getElementById("nuevoNombreAdmin")
+            .value = "";
+
+        document
+            .getElementById("nuevaPasswordAdmin")
+            .value = "";
+
+        document
+            .getElementById("nuevoRolAdmin")
+            .value =
+                "Administrador";
+
+
+        await cargarUsuariosAdmin();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error creando usuario:",
+            error
+        );
+
+        mensaje.innerHTML =
+            error.message ||
+            "No se pudo crear el usuario.";
+
+        mensaje.style.background =
+            "#f8d7da";
+
+        mensaje.style.color =
+            "#721c24";
+
+    }
+
+}
+
+
+// ==========================================
+// CAMBIAR ESTADO DEL USUARIO
+// ==========================================
+
+async function cambiarEstadoUsuario(
+    id,
+    estadoActual
+) {
+
+    const nuevoEstado =
+        estadoActual === true
+            ? false
+            : true;
+
+
+    const confirmar =
+        confirm(
+            nuevoEstado
+                ? "¿Desea activar este usuario?"
+                : "¿Desea desactivar este usuario?"
+        );
+
+
+    if (!confirmar) return;
+
+
+    try {
+
+        const resultado =
+            await llamarSupabase(
+                "cambiar_estado_usuario_admin",
+                {
+                    p_id: id,
+                    p_activo: nuevoEstado
+                }
+            );
+
+
+        console.log(
+            "Resultado cambio estado:",
+            resultado
+        );
+
+
+        if (!resultado || resultado.ok !== true) {
+
+            throw new Error(
+                resultado?.mensaje ||
+                "No se pudo cambiar el estado."
+            );
+
+        }
+
+
+        await cargarUsuariosAdmin();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error cambiando estado:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "No se pudo cambiar el estado del usuario."
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// INICIAR EVENTOS DE USUARIOS
+// ==========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const botonUsuario =
+            document.getElementById(
+                "btnGuardarUsuario"
+            );
+
+
+        if (botonUsuario) {
+
+            botonUsuario.addEventListener(
+                "click",
+                crearUsuarioAdmin
+            );
+
+        }
+
+
+        cargarUsuariosAdmin();
+
+    }
+);
