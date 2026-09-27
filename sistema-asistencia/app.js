@@ -1,37 +1,33 @@
-// ==========================================
-// CONFIGURACIÓN SUPABASE
-// ==========================================
-
 const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
-
 const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 
-
-// ==========================================
-// ELEMENTOS
-// ==========================================
-
 const dniInput = document.getElementById("dni");
-
 const btnEntrada = document.getElementById("btnEntrada");
 const btnSalida = document.getElementById("btnSalida");
-
 const btnBorrar = document.getElementById("btnBorrar");
 const btnLimpiar = document.getElementById("btnLimpiar");
 
-const trabajadorInfo = document.getElementById("trabajadorInfo");
+const trabajadorInfo =
+    document.getElementById("trabajadorInfo");
 
-const mensaje = document.getElementById("mensaje");
+const mensaje =
+    document.getElementById("mensaje");
 
-const reloj = document.getElementById("reloj");
-const fecha = document.getElementById("fecha");
+const reloj =
+    document.getElementById("reloj");
+
+const fecha =
+    document.getElementById("fecha");
 
 
 // ==========================================
-// FUNCIÓN PARA LLAMAR SUPABASE
+// LLAMAR SUPABASE
 // ==========================================
 
-async function llamarSupabase(nombreFuncion, parametros) {
+async function llamarSupabase(
+    nombreFuncion,
+    parametros
+) {
 
     const respuesta = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/${nombreFuncion}`,
@@ -48,19 +44,27 @@ async function llamarSupabase(nombreFuncion, parametros) {
         }
     );
 
+
     if (!respuesta.ok) {
 
-        const errorTexto = await respuesta.text();
+        const errorTexto =
+            await respuesta.text();
+
+        console.error(
+            "Error Supabase:",
+            errorTexto
+        );
 
         throw new Error(errorTexto);
     }
+
 
     return await respuesta.json();
 }
 
 
 // ==========================================
-// TECLADO
+// AGREGAR NÚMERO
 // ==========================================
 
 function agregarNumero(numero) {
@@ -69,22 +73,35 @@ function agregarNumero(numero) {
         return;
     }
 
+
     dniInput.value += numero;
 
+
     if (dniInput.value.length === 8) {
+
         buscarTrabajador();
     }
 }
 
 
+// ==========================================
+// BORRAR
+// ==========================================
+
 function borrarNumero() {
 
-    dniInput.value = dniInput.value.slice(0, -1);
+    dniInput.value =
+        dniInput.value.slice(0, -1);
 
     trabajadorInfo.innerHTML = "";
+
     mensaje.innerHTML = "";
 }
 
+
+// ==========================================
+// LIMPIAR DNI
+// ==========================================
 
 function limpiarDni() {
 
@@ -97,50 +114,41 @@ function limpiarDni() {
 
 
 // ==========================================
-// BOTÓN BORRAR
+// BOTONES DEL TECLADO
 // ==========================================
 
 if (btnBorrar) {
 
-    btnBorrar.addEventListener("click", function () {
-
-        borrarNumero();
-
-    });
-
+    btnBorrar.addEventListener(
+        "click",
+        borrarNumero
+    );
 }
 
-
-// ==========================================
-// BOTÓN LIMPIAR
-// ==========================================
 
 if (btnLimpiar) {
 
-    btnLimpiar.addEventListener("click", function () {
-
-        limpiarDni();
-
-    });
-
+    btnLimpiar.addEventListener(
+        "click",
+        limpiarDni
+    );
 }
 
 
-// ==========================================
-// BOTONES NUMÉRICOS
-// ==========================================
+document
+    .querySelectorAll(".numero")
+    .forEach(function (boton) {
 
-document.querySelectorAll(".numero").forEach(function (boton) {
+        boton.addEventListener(
+            "click",
+            function () {
 
-    boton.addEventListener("click", function () {
-
-        const numero = boton.dataset.numero;
-
-        agregarNumero(numero);
-
+                agregarNumero(
+                    boton.dataset.numero
+                );
+            }
+        );
     });
-
-});
 
 
 // ==========================================
@@ -149,27 +157,35 @@ document.querySelectorAll(".numero").forEach(function (boton) {
 
 async function buscarTrabajador() {
 
-    const dni = dniInput.value.trim();
+    const dni =
+        dniInput.value.trim();
+
 
     if (dni.length !== 8) {
         return;
     }
 
-    trabajadorInfo.innerHTML = "Buscando trabajador...";
+
+    trabajadorInfo.innerHTML =
+        "Buscando trabajador...";
+
 
     try {
 
-        const resultado = await llamarSupabase(
-            "consultar_trabajador",
-            {
-                p_dni: dni
-            }
+        const resultado =
+            await llamarSupabase(
+                "consultar_trabajador",
+                {
+                    p_dni: dni
+                }
+            );
+
+
+        console.log(
+            "Trabajador encontrado:",
+            resultado
         );
 
-
-        // ----------------------------------
-        // VALIDAR RESULTADO
-        // ----------------------------------
 
         if (!resultado) {
 
@@ -183,27 +199,21 @@ async function buscarTrabajador() {
         if (resultado.ok === false) {
 
             trabajadorInfo.innerHTML =
-                resultado.mensaje || "Trabajador no encontrado.";
+                resultado.mensaje ||
+                "Trabajador no encontrado.";
 
             return;
         }
 
 
-        // ----------------------------------
-        // OBTENER DATOS
-        // ----------------------------------
-
         const nombre =
-            resultado.nombre ||
-            "";
+            resultado.nombre || "";
 
         const apellidos =
-            resultado.apellidos ||
-            "";
+            resultado.apellidos || "";
 
         const dniTrabajador =
-            resultado.dni ||
-            dni;
+            resultado.dni || dni;
 
         const area =
             resultado.area ||
@@ -213,46 +223,66 @@ async function buscarTrabajador() {
             resultado.cargo ||
             "No registrado";
 
-        const horaEntrada =
-            resultado.hora_entrada ||
-            "No registrado";
 
-        const horaSalida =
-            resultado.hora_salida ||
-            "No registrado";
+        // ==================================
+        // HORARIO
+        // ==================================
+
+        let horarioTexto =
+            "No tiene horario asignado";
 
 
-        // ----------------------------------
-        // MOSTRAR DATOS
-        // SIN EMOJIS
-        // TODO AL MISMO TAMAÑO
-        // TODO ALINEADO A LA IZQUIERDA
-        // ----------------------------------
+        if (
+            resultado.hora_entrada &&
+            resultado.hora_salida
+        ) {
+
+            horarioTexto =
+                `${resultado.hora_entrada} - ${resultado.hora_salida}`;
+
+        }
+
+
+        // ==================================
+        // MOSTRAR INFORMACIÓN
+        // ==================================
 
         trabajadorInfo.innerHTML = `
 
-            <div>Nombre: ${nombre} ${apellidos}</div>
+            <div>
+                Nombre: ${nombre} ${apellidos}
+            </div>
 
-            <div>DNI: ${dniTrabajador}</div>
+            <div>
+                DNI: ${dniTrabajador}
+            </div>
 
-            <div>Área: ${area}</div>
+            <div>
+                Área: ${area}
+            </div>
 
-            <div>Cargo: ${cargo}</div>
+            <div>
+                Cargo: ${cargo}
+            </div>
 
-            <div>Horario: ${horaEntrada} - ${horaSalida}</div>
+            <div>
+                Horario: ${horarioTexto}
+            </div>
 
         `;
 
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error buscando trabajador:",
+            error
+        );
+
 
         trabajadorInfo.innerHTML =
             "No se pudo consultar al trabajador.";
-
     }
-
 }
 
 
@@ -262,55 +292,54 @@ async function buscarTrabajador() {
 
 function obtenerUbicacion() {
 
-    return new Promise(function (resolve, reject) {
+    return new Promise(
+        function (resolve, reject) {
 
-        if (!navigator.geolocation) {
+            if (!navigator.geolocation) {
 
-            reject(
-                new Error(
-                    "Este dispositivo no permite obtener ubicación."
-                )
-            );
+                reject(
+                    new Error(
+                        "Este dispositivo no permite obtener ubicación."
+                    )
+                );
 
-            return;
-        }
-
-
-        navigator.geolocation.getCurrentPosition(
-
-            function (position) {
-
-                resolve({
-
-                    latitud: position.coords.latitude,
-
-                    longitud: position.coords.longitude,
-
-                    precision: position.coords.accuracy
-
-                });
-
-            },
-
-            function (error) {
-
-                reject(error);
-
-            },
-
-            {
-                enableHighAccuracy: true,
-
-                timeout: 10000,
-
-                maximumAge: 0
-
+                return;
             }
 
-        );
 
-    });
+            navigator.geolocation.getCurrentPosition(
 
+                function (position) {
+
+                    resolve({
+
+                        latitud:
+                            position.coords.latitude,
+
+                        longitud:
+                            position.coords.longitude,
+
+                        precision:
+                            position.coords.accuracy
+
+                    });
+                },
+
+
+                function (error) {
+
+                    reject(error);
+                },
+
+
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+    );
 }
 
 
@@ -320,7 +349,8 @@ function obtenerUbicacion() {
 
 async function registrarMarcacion(tipo) {
 
-    const dni = dniInput.value.trim();
+    const dni =
+        dniInput.value.trim();
 
 
     if (dni.length !== 8) {
@@ -329,7 +359,6 @@ async function registrarMarcacion(tipo) {
             "Ingrese un DNI válido de 8 dígitos.";
 
         return;
-
     }
 
 
@@ -339,34 +368,40 @@ async function registrarMarcacion(tipo) {
 
     try {
 
-        const ubicacion = await obtenerUbicacion();
+        const ubicacion =
+            await obtenerUbicacion();
 
 
         mensaje.innerHTML =
             "Registrando marcación...";
 
 
-        const resultado = await llamarSupabase(
-            "registrar_marcacion_con_ubicacion",
-            {
-                p_dni: dni,
+        const resultado =
+            await llamarSupabase(
+                "registrar_marcacion_con_ubicacion",
+                {
+                    p_dni: dni,
+                    p_tipo: tipo,
+                    p_latitud:
+                        ubicacion.latitud,
+                    p_longitud:
+                        ubicacion.longitud,
+                    p_precision:
+                        ubicacion.precision
+                }
+            );
 
-                p_tipo: tipo,
 
-                p_latitud: ubicacion.latitud,
-
-                p_longitud: ubicacion.longitud,
-
-                p_precision: ubicacion.precision
-            }
+        console.log(
+            "Marcación:",
+            resultado
         );
 
 
-        // ----------------------------------
-        // ERROR
-        // ----------------------------------
-
-        if (!resultado || resultado.ok === false) {
+        if (
+            !resultado ||
+            resultado.ok === false
+        ) {
 
             mensaje.innerHTML =
                 resultado?.mensaje ||
@@ -376,9 +411,9 @@ async function registrarMarcacion(tipo) {
         }
 
 
-        // ----------------------------------
+        // ==================================
         // ENTRADA
-        // ----------------------------------
+        // ==================================
 
         if (tipo === "ENTRADA") {
 
@@ -394,27 +429,29 @@ async function registrarMarcacion(tipo) {
 
                 mensaje.innerHTML =
                     "Entrada registrada correctamente.";
-
             }
-
         }
 
 
-        // ----------------------------------
+        // ==================================
         // SALIDA
-        // ----------------------------------
+        // ==================================
 
         if (tipo === "SALIDA") {
 
             let texto =
                 "Salida registrada correctamente.";
 
-            if (resultado.horas_trabajadas) {
+
+            if (
+                resultado.horas_trabajadas !== null &&
+                resultado.horas_trabajadas !== undefined
+            ) {
 
                 texto +=
                     ` Horas trabajadas: ${resultado.horas_trabajadas}.`;
-
             }
+
 
             if (
                 resultado.horas_extras &&
@@ -423,34 +460,40 @@ async function registrarMarcacion(tipo) {
 
                 texto +=
                     ` Horas extras: ${resultado.horas_extras}.`;
-
             }
 
-            mensaje.innerHTML = texto;
 
+            mensaje.innerHTML =
+                texto;
         }
 
 
-        // ----------------------------------
-        // LIMPIAR DESPUÉS DE 6 SEGUNDOS
-        // ----------------------------------
+        // ==================================
+        // LIMPIAR AUTOMÁTICAMENTE
+        // DESPUÉS DE 6 SEGUNDOS
+        // ==================================
 
-        setTimeout(function () {
+        setTimeout(
+            function () {
 
-            limpiarDni();
+                limpiarDni();
 
-        }, 6000);
+            },
+            6000
+        );
 
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error registrando:",
+            error
+        );
+
 
         mensaje.innerHTML =
             "No se pudo obtener la ubicación. Active el GPS.";
-
     }
-
 }
 
 
@@ -464,11 +507,11 @@ if (btnEntrada) {
         "click",
         function () {
 
-            registrarMarcacion("ENTRADA");
-
+            registrarMarcacion(
+                "ENTRADA"
+            );
         }
     );
-
 }
 
 
@@ -482,11 +525,11 @@ if (btnSalida) {
         "click",
         function () {
 
-            registrarMarcacion("SALIDA");
-
+            registrarMarcacion(
+                "SALIDA"
+            );
         }
     );
-
 }
 
 
@@ -496,23 +539,32 @@ if (btnSalida) {
 
 function actualizarReloj() {
 
-    const ahora = new Date();
+    const ahora =
+        new Date();
+
 
     const horas =
-        String(ahora.getHours()).padStart(2, "0");
+        String(
+            ahora.getHours()
+        ).padStart(2, "0");
+
 
     const minutos =
-        String(ahora.getMinutes()).padStart(2, "0");
+        String(
+            ahora.getMinutes()
+        ).padStart(2, "0");
+
 
     const segundos =
-        String(ahora.getSeconds()).padStart(2, "0");
+        String(
+            ahora.getSeconds()
+        ).padStart(2, "0");
 
 
     if (reloj) {
 
         reloj.textContent =
             `${horas}:${minutos}:${segundos}`;
-
     }
 
 
@@ -528,11 +580,13 @@ function actualizarReloj() {
                     day: "numeric"
                 }
             );
-
     }
-
 }
 
+
+// ==========================================
+// INICIAR RELOJ
+// ==========================================
 
 actualizarReloj();
 
