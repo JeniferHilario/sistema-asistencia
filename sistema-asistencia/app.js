@@ -1,667 +1,369 @@
-// ======================================================
-// CONFIGURACIÓN SUPABASE
-// ======================================================
+<!DOCTYPE html>
 
-const SUPABASE_URL =
-    "https://aoyzlskorbbloxppwmhs.supabase.co";
+<html lang="es">
 
-const SUPABASE_KEY =
-    "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+```
+<title>Control de Asistencia - Peppers Chicken</title>
 
-// ======================================================
-// ELEMENTOS DE LA PÁGINA
-// ======================================================
+<link rel="stylesheet" href="style.css">
 
-const dniInput = document.getElementById("dni");
-const trabajadorInfo = document.getElementById("trabajadorInfo");
-const mensaje = document.getElementById("mensaje");
+<style>
 
-const btnEntrada = document.getElementById("btnEntrada");
-const btnSalida = document.getElementById("btnSalida");
-
-
-// ======================================================
-// TEMPORIZADOR DE LIMPIEZA
-// ======================================================
-
-let temporizadorLimpieza = null;
-
-
-// ======================================================
-// RELOJ
-// ======================================================
-
-function actualizarReloj() {
-
-    const ahora = new Date();
-
-    const horas =
-        String(ahora.getHours()).padStart(2, "0");
-
-    const minutos =
-        String(ahora.getMinutes()).padStart(2, "0");
-
-    const segundos =
-        String(ahora.getSeconds()).padStart(2, "0");
-
-    document.getElementById("reloj").textContent =
-        `${horas}:${minutos}:${segundos}`;
-
-    document.getElementById("fecha").textContent =
-        ahora.toLocaleDateString(
-            "es-PE",
-            {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            }
-        );
-}
-
-actualizarReloj();
-
-setInterval(actualizarReloj, 1000);
-
-
-// ======================================================
-// LIMPIAR PANTALLA
-// ======================================================
-
-function limpiarPantalla() {
-
-    console.log("Limpiando pantalla...");
-
-    dniInput.value = "";
-
-    trabajadorInfo.innerHTML = "";
-
-    mensaje.textContent = "";
-
-    btnEntrada.disabled = false;
-    btnSalida.disabled = false;
-
-}
-
-
-// ======================================================
-// PROGRAMAR LIMPIEZA AUTOMÁTICA
-// ======================================================
-
-function programarLimpieza() {
-
-    // Cancelar temporizador anterior
-    if (temporizadorLimpieza !== null) {
-
-        clearTimeout(temporizadorLimpieza);
-
+    body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    console.log("La pantalla se limpiará en 6 segundos...");
+    .contenedor {
+        width: 100%;
+        max-width: 950px;
+        margin: auto;
+        padding: 20px 25px;
+    }
 
-    temporizadorLimpieza = setTimeout(function () {
+    /* ENCABEZADO */
 
-        limpiarPantalla();
+    .encabezado {
+        text-align: center;
+        margin-bottom: 12px;
+    }
 
-        temporizadorLimpieza = null;
+    .encabezado h1 {
+        margin: 0;
+        font-size: 42px;
+    }
 
-        console.log(
-            "Pantalla limpia. Lista para el siguiente trabajador."
-        );
+    .empresa {
+        margin: 3px 0;
+        font-size: 24px;
+        font-weight: bold;
+    }
 
-    }, 6000);
+    #reloj {
+        font-size: 25px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
 
-}
+    #fecha {
+        font-size: 15px;
+        margin-top: 2px;
+    }
 
+    /* ÁREA PRINCIPAL */
 
-// ======================================================
-// TECLADO TÁCTIL
-// ======================================================
+    .zona-marcacion {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 25px;
+        align-items: center;
+    }
 
-document.querySelectorAll(".numero").forEach(function (boton) {
+    /* DNI */
 
-    boton.addEventListener("click", function () {
+    .seccion-dni {
+        text-align: center;
+    }
 
-        const numero = boton.dataset.numero;
+    .seccion-dni label {
+        display: block;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
 
-        if (dniInput.value.length < 8) {
+    .seccion-dni input {
+        width: 100%;
+        max-width: 300px;
+        height: 58px;
+        text-align: center;
+        font-size: 30px;
+        font-weight: bold;
+        letter-spacing: 5px;
 
-            dniInput.value += numero;
+        /* DNI AMARILLO */
+        background: #ffd43b;
+        color: #222;
 
-            // Cuando completa los 8 dígitos
-            if (dniInput.value.length === 8) {
+        border: 3px solid #e0a800;
+        border-radius: 10px;
+    }
 
-                consultarTrabajador();
+    /* INFORMACIÓN */
 
-            }
+    .trabajador-info {
+        min-height: 35px;
+        margin-top: 10px;
+        text-align: center;
+        font-size: 17px;
+    }
 
+    /* TECLADO */
+
+    .teclado {
+        width: 100%;
+        max-width: 360px;
+        margin: auto;
+
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .teclado button {
+        height: 58px;
+        border-radius: 9px;
+        font-size: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    /* BOTONES */
+
+    .botones {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 18px;
+    }
+
+    .botones button {
+        height: 60px;
+        border-radius: 10px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    #btnEntrada {
+        background: #198754;
+        color: white;
+        border: none;
+    }
+
+    #btnSalida {
+        background: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    /* MENSAJE */
+
+    #mensaje {
+        margin-top: 12px;
+        min-height: 35px;
+        text-align: center;
+        font-size: 17px;
+        font-weight: bold;
+    }
+
+    /* PANTALLAS PEQUEÑAS */
+
+    @media (max-width: 700px) {
+
+        body {
+            padding: 8px;
         }
 
-    });
-
-});
-
-
-// ======================================================
-// BOTÓN BORRAR
-// ======================================================
-
-document
-    .getElementById("btnBorrar")
-    .addEventListener("click", function () {
-
-        dniInput.value =
-            dniInput.value.slice(0, -1);
-
-        trabajadorInfo.innerHTML = "";
-
-        mensaje.textContent = "";
-
-    });
-
-
-// ======================================================
-// BOTÓN LIMPIAR
-// ======================================================
-
-document
-    .getElementById("btnLimpiar")
-    .addEventListener("click", function () {
-
-        if (temporizadorLimpieza !== null) {
-
-            clearTimeout(temporizadorLimpieza);
-
-            temporizadorLimpieza = null;
-
+        .contenedor {
+            padding: 15px;
         }
 
-        limpiarPantalla();
-
-    });
-
-
-// ======================================================
-// CONSULTAR TRABAJADOR
-// ======================================================
-
-async function consultarTrabajador() {
-
-    const dni =
-        dniInput.value.trim();
-
-    trabajadorInfo.innerHTML =
-        "⏳ Buscando trabajador...";
-
-    try {
-
-        const respuesta = await fetch(
-            `${SUPABASE_URL}/rest/v1/rpc/consultar_trabajador`,
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json",
-                    "apikey": SUPABASE_KEY,
-                    "Authorization": `Bearer ${SUPABASE_KEY}`
-                },
-
-                body: JSON.stringify({
-                    p_dni: dni
-                })
-            }
-        );
-
-        const resultado =
-            await respuesta.json();
-
-        console.log("Consulta:", resultado);
-
-
-        // ==================================================
-        // ERROR DE SUPABASE
-        // ==================================================
-
-        if (!respuesta.ok) {
-
-            trabajadorInfo.innerHTML =
-                "❌ Error al consultar trabajador.";
-
-            programarLimpieza();
-
-            return;
-
+        .encabezado h1 {
+            font-size: 34px;
         }
 
-
-        // ==================================================
-        // DNI NO ENCONTRADO
-        // ==================================================
-
-        if (!resultado.ok) {
-
-            trabajadorInfo.innerHTML =
-                `⚠️ ${resultado.mensaje}`;
-
-            programarLimpieza();
-
-            return;
-
+        .zona-marcacion {
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
 
-
-        // ==================================================
-        // TRABAJADOR CON HORARIO
-        // ==================================================
-
-        if (resultado.tiene_horario) {
-
-            trabajadorInfo.innerHTML = `
-
-                <div class="nombre-trabajador">
-
-                    👤 ${resultado.nombre}
-                    ${resultado.apellidos}
-
-                </div>
-
-                <div class="datos-trabajador">
-
-                    <p>
-                        <strong>Área:</strong>
-                        ${resultado.area}
-                    </p>
-
-                    <p>
-                        <strong>Cargo:</strong>
-                        ${resultado.cargo}
-                    </p>
-
-                    <p>
-                        <strong>Horario:</strong>
-                        ${resultado.hora_entrada.substring(0,5)}
-                        -
-                        ${resultado.hora_salida.substring(0,5)}
-                    </p>
-
-                </div>
-
-            `;
-
+        .teclado {
+            max-width: 330px;
         }
 
+        .teclado button {
+            height: 52px;
+            font-size: 22px;
+        }
 
-        // ==================================================
-        // TRABAJADOR SIN HORARIO
-        // ==================================================
-
-        else {
-
-            trabajadorInfo.innerHTML = `
-
-                <div class="nombre-trabajador">
-
-                    👤 ${resultado.nombre}
-                    ${resultado.apellidos}
-
-                </div>
-
-                <div class="datos-trabajador">
-
-                    <p>
-                        <strong>Área:</strong>
-                        ${resultado.area}
-                    </p>
-
-                    <p>
-                        <strong>Cargo:</strong>
-                        ${resultado.cargo}
-                    </p>
-
-                    <p class="sin-horario">
-
-                        ⚠️ ${resultado.mensaje}
-
-                    </p>
-
-                </div>
-
-            `;
-
-            programarLimpieza();
-
+        .botones button {
+            height: 55px;
+            font-size: 18px;
         }
 
     }
 
-    catch (error) {
+</style>
+```
 
-        console.error(error);
+</head>
 
-        trabajadorInfo.innerHTML =
-            "❌ No se pudo conectar con el sistema.";
+<body>
 
-        programarLimpieza();
+```
+<div class="contenedor">
 
-    }
+    <!-- ENCABEZADO -->
 
-}
+    <div class="encabezado">
 
+        <h1>🐥</h1>
 
-// ======================================================
-// OBTENER UBICACIÓN
-// ======================================================
+        <p class="empresa">
+            PEPPERS CHICKEN
+        </p>
 
-function obtenerUbicacion() {
+        <h2>
+            CONTROL DE ASISTENCIA
+        </h2>
 
-    return new Promise(function (resolve, reject) {
+        <div id="reloj">
+            00:00:00
+        </div>
 
-        if (!navigator.geolocation) {
+        <div id="fecha">
+            Cargando fecha...
+        </div>
 
-            reject(
-                new Error(
-                    "Este dispositivo no permite obtener ubicación."
-                )
-            );
+    </div>
 
-            return;
 
-        }
+    <!-- ÁREA DE MARCACIÓN -->
 
-        navigator.geolocation.getCurrentPosition(
+    <div class="zona-marcacion">
 
-            function (posicion) {
+        <!-- DNI -->
 
-                resolve({
+        <div>
 
-                    latitud:
-                        posicion.coords.latitude,
+            <div class="seccion-dni">
 
-                    longitud:
-                        posicion.coords.longitude,
+                <label>
+                    INGRESE SU DNI
+                </label>
 
-                    precision:
-                        posicion.coords.accuracy
+                <input
+                    type="text"
+                    id="dni"
+                    placeholder="--------"
+                    maxlength="8"
+                    readonly
+                >
 
-                });
+            </div>
 
-            },
 
-            function (error) {
+            <!-- INFORMACIÓN DEL TRABAJADOR -->
 
-                console.error(
-                    "Error de ubicación:",
-                    error
-                );
+            <div
+                id="trabajadorInfo"
+                class="trabajador-info">
+            </div>
 
-                reject(error);
+        </div>
 
-            },
 
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
+        <!-- TECLADO TÁCTIL -->
 
-        );
+        <div class="teclado">
 
-    });
+            <button class="numero" data-numero="1">
+                1
+            </button>
 
-}
+            <button class="numero" data-numero="2">
+                2
+            </button>
 
+            <button class="numero" data-numero="3">
+                3
+            </button>
 
-// ======================================================
-// REGISTRAR MARCACIÓN CON UBICACIÓN
-// ======================================================
+            <button
+                class="borrar"
+                id="btnBorrar">
+                ⌫
+            </button>
 
-async function registrarMarcacion(tipo) {
 
-    const dni =
-        dniInput.value.trim();
+            <button class="numero" data-numero="4">
+                4
+            </button>
 
+            <button class="numero" data-numero="5">
+                5
+            </button>
 
-    // ==================================================
-    // VALIDAR DNI VACÍO
-    // ==================================================
+            <button class="numero" data-numero="6">
+                6
+            </button>
 
-    if (dni === "") {
+            <button
+                class="limpiar"
+                id="btnLimpiar">
+                C
+            </button>
 
-        mensaje.textContent =
-            "⚠️ Ingrese su DNI";
 
-        programarLimpieza();
+            <button class="numero" data-numero="7">
+                7
+            </button>
 
-        return;
+            <button class="numero" data-numero="8">
+                8
+            </button>
 
-    }
+            <button class="numero" data-numero="9">
+                9
+            </button>
 
+            <button
+                class="numero"
+                data-numero="0">
+                0
+            </button>
 
-    // ==================================================
-    // VALIDAR 8 DÍGITOS
-    // ==================================================
+        </div>
 
-    if (!/^\d{8}$/.test(dni)) {
+    </div>
 
-        mensaje.textContent =
-            "⚠️ Complete los 8 dígitos del DNI";
 
-        programarLimpieza();
+    <!-- BOTONES DE MARCACIÓN -->
 
-        return;
+    <div class="botones">
 
-    }
+        <button id="btnEntrada">
+            ✓ ENTRADA
+        </button>
 
+        <button id="btnSalida">
+            ↪ SALIDA
+        </button>
 
-    // ==================================================
-    // DESACTIVAR BOTONES
-    // ==================================================
+    </div>
 
-    btnEntrada.disabled = true;
-    btnSalida.disabled = true;
 
+    <!-- MENSAJE -->
 
-    mensaje.textContent =
-        "📍 Obteniendo ubicación...";
+    <div id="mensaje"></div>
 
+</div>
 
-    try {
 
-        // ==================================================
-        // OBTENER UBICACIÓN
-        // ==================================================
+<script src="app.js"></script>
+```
 
-        const ubicacion =
-            await obtenerUbicacion();
+</body>
 
-
-        console.log(
-            "Ubicación obtenida:",
-            ubicacion
-        );
-
-
-        // ==================================================
-        // REGISTRAR EN SUPABASE
-        // ==================================================
-
-        mensaje.textContent =
-            "⏳ Registrando marcación...";
-
-
-        const respuesta = await fetch(
-            `${SUPABASE_URL}/rest/v1/rpc/registrar_marcacion_con_ubicacion`,
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json",
-                    "apikey": SUPABASE_KEY,
-                    "Authorization": `Bearer ${SUPABASE_KEY}`
-                },
-
-                body: JSON.stringify({
-
-                    p_dni:
-                        dni,
-
-                    p_tipo:
-                        tipo,
-
-                    p_latitud:
-                        ubicacion.latitud,
-
-                    p_longitud:
-                        ubicacion.longitud,
-
-                    p_precision:
-                        ubicacion.precision
-
-                })
-
-            }
-        );
-
-
-        const resultado =
-            await respuesta.json();
-
-
-        console.log(
-            "Resultado de marcación:",
-            resultado
-        );
-
-
-        // ==================================================
-        // ERROR DE SUPABASE
-        // ==================================================
-
-        if (!respuesta.ok) {
-
-            console.error(
-                "Error Supabase:",
-                resultado
-            );
-
-            mensaje.textContent =
-                "❌ Error al registrar.";
-
-            btnEntrada.disabled = false;
-            btnSalida.disabled = false;
-
-            programarLimpieza();
-
-            return;
-
-        }
-
-
-        // ==================================================
-        // MARCACIÓN CORRECTA
-        // ==================================================
-
-        if (resultado.ok) {
-
-            mensaje.textContent =
-                `✅ ${resultado.mensaje}`;
-
-            programarLimpieza();
-
-        }
-
-
-        // ==================================================
-        // MARCACIÓN NO PERMITIDA
-        // ==================================================
-
-        else {
-
-            mensaje.textContent =
-                `⚠️ ${resultado.mensaje}`;
-
-            btnEntrada.disabled = false;
-            btnSalida.disabled = false;
-
-            programarLimpieza();
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ERROR DE UBICACIÓN / CONEXIÓN
-    // ==================================================
-
-    catch (error) {
-
-        console.error(error);
-
-
-        if (error.code === 1) {
-
-            mensaje.textContent =
-                "📍 Debe permitir el acceso a la ubicación para marcar.";
-
-        }
-
-        else if (error.code === 2) {
-
-            mensaje.textContent =
-                "📍 No se pudo obtener su ubicación.";
-
-        }
-
-        else if (error.code === 3) {
-
-            mensaje.textContent =
-                "📍 La ubicación tardó demasiado. Intente nuevamente.";
-
-        }
-
-        else {
-
-            mensaje.textContent =
-                "❌ No se pudo registrar la marcación.";
-
-        }
-
-
-        btnEntrada.disabled = false;
-        btnSalida.disabled = false;
-
-        programarLimpieza();
-
-    }
-
-}
-
-
-// ======================================================
-// BOTÓN ENTRADA
-// ======================================================
-
-btnEntrada.addEventListener(
-    "click",
-    function () {
-
-        registrarMarcacion("ENTRADA");
-
-    }
-);
-
-
-// ======================================================
-// BOTÓN SALIDA
-// ======================================================
-
-btnSalida.addEventListener(
-    "click",
-    function () {
-
-        registrarMarcacion("SALIDA");
-
-    }
-);
+</html>
