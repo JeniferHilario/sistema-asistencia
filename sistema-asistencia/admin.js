@@ -12,7 +12,6 @@ if (sessionStorage.getItem("adminAutorizado") !== "true") {
 // ======================================================
 
 const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
-
 const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 
 
