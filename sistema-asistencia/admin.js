@@ -1372,16 +1372,28 @@ document.addEventListener(
             document.getElementById(
                 "btnGuardarUsuario"
             );
+  if (botonUsuario) {
 
+    console.log("BOTÓN DE USUARIO ENCONTRADO");
 
-        if (botonUsuario) {
+    botonUsuario.addEventListener(
+        "click",
+        function() {
 
-            botonUsuario.addEventListener(
-                "click",
-                crearUsuarioAdmin
-            );
+            console.log("BOTÓN CREAR USUARIO PRESIONADO");
+
+            crearUsuarioAdmin();
 
         }
+    );
+
+} else {
+
+    console.log("NO SE ENCONTRÓ EL BOTÓN DE USUARIO");
+
+}
+
+      
 
 
         cargarUsuariosAdmin();
