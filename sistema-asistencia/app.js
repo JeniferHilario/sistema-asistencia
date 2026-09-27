@@ -1,369 +1,542 @@
-<!DOCTYPE html>
+// ==========================================
+// CONFIGURACIÓN SUPABASE
+// ==========================================
 
-<html lang="es">
+const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 
-```
-<title>Control de Asistencia - Peppers Chicken</title>
 
-<link rel="stylesheet" href="style.css">
+// ==========================================
+// ELEMENTOS
+// ==========================================
 
-<style>
+const dniInput = document.getElementById("dni");
 
-    body {
-        min-height: 100vh;
-        margin: 0;
-        padding: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+const btnEntrada = document.getElementById("btnEntrada");
+const btnSalida = document.getElementById("btnSalida");
+
+const btnBorrar = document.getElementById("btnBorrar");
+const btnLimpiar = document.getElementById("btnLimpiar");
+
+const trabajadorInfo = document.getElementById("trabajadorInfo");
+
+const mensaje = document.getElementById("mensaje");
+
+const reloj = document.getElementById("reloj");
+const fecha = document.getElementById("fecha");
+
+
+// ==========================================
+// FUNCIÓN PARA LLAMAR SUPABASE
+// ==========================================
+
+async function llamarSupabase(nombreFuncion, parametros) {
+
+    const respuesta = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/${nombreFuncion}`,
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`
+            },
+
+            body: JSON.stringify(parametros)
+        }
+    );
+
+    if (!respuesta.ok) {
+
+        const errorTexto = await respuesta.text();
+
+        throw new Error(errorTexto);
     }
 
-    .contenedor {
-        width: 100%;
-        max-width: 950px;
-        margin: auto;
-        padding: 20px 25px;
+    return await respuesta.json();
+}
+
+
+// ==========================================
+// TECLADO
+// ==========================================
+
+function agregarNumero(numero) {
+
+    if (dniInput.value.length >= 8) {
+        return;
     }
 
-    /* ENCABEZADO */
+    dniInput.value += numero;
 
-    .encabezado {
-        text-align: center;
-        margin-bottom: 12px;
+    if (dniInput.value.length === 8) {
+        buscarTrabajador();
+    }
+}
+
+
+function borrarNumero() {
+
+    dniInput.value = dniInput.value.slice(0, -1);
+
+    trabajadorInfo.innerHTML = "";
+    mensaje.innerHTML = "";
+}
+
+
+function limpiarDni() {
+
+    dniInput.value = "";
+
+    trabajadorInfo.innerHTML = "";
+
+    mensaje.innerHTML = "";
+}
+
+
+// ==========================================
+// BOTÓN BORRAR
+// ==========================================
+
+if (btnBorrar) {
+
+    btnBorrar.addEventListener("click", function () {
+
+        borrarNumero();
+
+    });
+
+}
+
+
+// ==========================================
+// BOTÓN LIMPIAR
+// ==========================================
+
+if (btnLimpiar) {
+
+    btnLimpiar.addEventListener("click", function () {
+
+        limpiarDni();
+
+    });
+
+}
+
+
+// ==========================================
+// BOTONES NUMÉRICOS
+// ==========================================
+
+document.querySelectorAll(".numero").forEach(function (boton) {
+
+    boton.addEventListener("click", function () {
+
+        const numero = boton.dataset.numero;
+
+        agregarNumero(numero);
+
+    });
+
+});
+
+
+// ==========================================
+// BUSCAR TRABAJADOR
+// ==========================================
+
+async function buscarTrabajador() {
+
+    const dni = dniInput.value.trim();
+
+    if (dni.length !== 8) {
+        return;
     }
 
-    .encabezado h1 {
-        margin: 0;
-        font-size: 42px;
-    }
+    trabajadorInfo.innerHTML = "Buscando trabajador...";
 
-    .empresa {
-        margin: 3px 0;
-        font-size: 24px;
-        font-weight: bold;
-    }
+    try {
 
-    #reloj {
-        font-size: 25px;
-        font-weight: bold;
-        margin-top: 5px;
-    }
+        const resultado = await llamarSupabase(
+            "consultar_trabajador",
+            {
+                p_dni: dni
+            }
+        );
 
-    #fecha {
-        font-size: 15px;
-        margin-top: 2px;
-    }
 
-    /* ÁREA PRINCIPAL */
+        // ----------------------------------
+        // VALIDAR RESULTADO
+        // ----------------------------------
 
-    .zona-marcacion {
-        display: grid;
-        grid-template-columns: 0.9fr 1.1fr;
-        gap: 25px;
-        align-items: center;
-    }
+        if (!resultado) {
 
-    /* DNI */
+            trabajadorInfo.innerHTML =
+                "Trabajador no encontrado.";
 
-    .seccion-dni {
-        text-align: center;
-    }
-
-    .seccion-dni label {
-        display: block;
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 8px;
-    }
-
-    .seccion-dni input {
-        width: 100%;
-        max-width: 300px;
-        height: 58px;
-        text-align: center;
-        font-size: 30px;
-        font-weight: bold;
-        letter-spacing: 5px;
-
-        /* DNI AMARILLO */
-        background: #ffd43b;
-        color: #222;
-
-        border: 3px solid #e0a800;
-        border-radius: 10px;
-    }
-
-    /* INFORMACIÓN */
-
-    .trabajador-info {
-        min-height: 35px;
-        margin-top: 10px;
-        text-align: center;
-        font-size: 17px;
-    }
-
-    /* TECLADO */
-
-    .teclado {
-        width: 100%;
-        max-width: 360px;
-        margin: auto;
-
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-    }
-
-    .teclado button {
-        height: 58px;
-        border-radius: 9px;
-        font-size: 25px;
-        font-weight: bold;
-        cursor: pointer;
-        touch-action: manipulation;
-    }
-
-    /* BOTONES */
-
-    .botones {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-top: 18px;
-    }
-
-    .botones button {
-        height: 60px;
-        border-radius: 10px;
-        font-size: 20px;
-        font-weight: bold;
-        cursor: pointer;
-        touch-action: manipulation;
-    }
-
-    #btnEntrada {
-        background: #198754;
-        color: white;
-        border: none;
-    }
-
-    #btnSalida {
-        background: #dc3545;
-        color: white;
-        border: none;
-    }
-
-    /* MENSAJE */
-
-    #mensaje {
-        margin-top: 12px;
-        min-height: 35px;
-        text-align: center;
-        font-size: 17px;
-        font-weight: bold;
-    }
-
-    /* PANTALLAS PEQUEÑAS */
-
-    @media (max-width: 700px) {
-
-        body {
-            padding: 8px;
+            return;
         }
 
-        .contenedor {
-            padding: 15px;
+
+        if (resultado.ok === false) {
+
+            trabajadorInfo.innerHTML =
+                resultado.mensaje || "Trabajador no encontrado.";
+
+            return;
         }
 
-        .encabezado h1 {
-            font-size: 34px;
-        }
 
-        .zona-marcacion {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
+        // ----------------------------------
+        // OBTENER DATOS
+        // ----------------------------------
 
-        .teclado {
-            max-width: 330px;
-        }
+        const nombre =
+            resultado.nombre ||
+            "";
 
-        .teclado button {
-            height: 52px;
-            font-size: 22px;
-        }
+        const apellidos =
+            resultado.apellidos ||
+            "";
 
-        .botones button {
-            height: 55px;
-            font-size: 18px;
-        }
+        const dniTrabajador =
+            resultado.dni ||
+            dni;
+
+        const area =
+            resultado.area ||
+            "No registrado";
+
+        const cargo =
+            resultado.cargo ||
+            "No registrado";
+
+        const horaEntrada =
+            resultado.hora_entrada ||
+            "No registrado";
+
+        const horaSalida =
+            resultado.hora_salida ||
+            "No registrado";
+
+
+        // ----------------------------------
+        // MOSTRAR DATOS
+        // SIN EMOJIS
+        // TODO AL MISMO TAMAÑO
+        // TODO ALINEADO A LA IZQUIERDA
+        // ----------------------------------
+
+        trabajadorInfo.innerHTML = `
+
+            <div>Nombre: ${nombre} ${apellidos}</div>
+
+            <div>DNI: ${dniTrabajador}</div>
+
+            <div>Área: ${area}</div>
+
+            <div>Cargo: ${cargo}</div>
+
+            <div>Horario: ${horaEntrada} - ${horaSalida}</div>
+
+        `;
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        trabajadorInfo.innerHTML =
+            "No se pudo consultar al trabajador.";
 
     }
 
-</style>
-```
-
-</head>
-
-<body>
-
-```
-<div class="contenedor">
-
-    <!-- ENCABEZADO -->
-
-    <div class="encabezado">
-
-        <h1>🐥</h1>
-
-        <p class="empresa">
-            PEPPERS CHICKEN
-        </p>
-
-        <h2>
-            CONTROL DE ASISTENCIA
-        </h2>
-
-        <div id="reloj">
-            00:00:00
-        </div>
-
-        <div id="fecha">
-            Cargando fecha...
-        </div>
-
-    </div>
+}
 
 
-    <!-- ÁREA DE MARCACIÓN -->
+// ==========================================
+// OBTENER UBICACIÓN
+// ==========================================
 
-    <div class="zona-marcacion">
+function obtenerUbicacion() {
 
-        <!-- DNI -->
+    return new Promise(function (resolve, reject) {
 
-        <div>
+        if (!navigator.geolocation) {
 
-            <div class="seccion-dni">
+            reject(
+                new Error(
+                    "Este dispositivo no permite obtener ubicación."
+                )
+            );
 
-                <label>
-                    INGRESE SU DNI
-                </label>
-
-                <input
-                    type="text"
-                    id="dni"
-                    placeholder="--------"
-                    maxlength="8"
-                    readonly
-                >
-
-            </div>
+            return;
+        }
 
 
-            <!-- INFORMACIÓN DEL TRABAJADOR -->
+        navigator.geolocation.getCurrentPosition(
 
-            <div
-                id="trabajadorInfo"
-                class="trabajador-info">
-            </div>
+            function (position) {
 
-        </div>
+                resolve({
 
+                    latitud: position.coords.latitude,
 
-        <!-- TECLADO TÁCTIL -->
+                    longitud: position.coords.longitude,
 
-        <div class="teclado">
+                    precision: position.coords.accuracy
 
-            <button class="numero" data-numero="1">
-                1
-            </button>
+                });
 
-            <button class="numero" data-numero="2">
-                2
-            </button>
+            },
 
-            <button class="numero" data-numero="3">
-                3
-            </button>
+            function (error) {
 
-            <button
-                class="borrar"
-                id="btnBorrar">
-                ⌫
-            </button>
+                reject(error);
 
+            },
 
-            <button class="numero" data-numero="4">
-                4
-            </button>
+            {
+                enableHighAccuracy: true,
 
-            <button class="numero" data-numero="5">
-                5
-            </button>
+                timeout: 10000,
 
-            <button class="numero" data-numero="6">
-                6
-            </button>
+                maximumAge: 0
 
-            <button
-                class="limpiar"
-                id="btnLimpiar">
-                C
-            </button>
+            }
+
+        );
+
+    });
+
+}
 
 
-            <button class="numero" data-numero="7">
-                7
-            </button>
+// ==========================================
+// REGISTRAR MARCACIÓN
+// ==========================================
 
-            <button class="numero" data-numero="8">
-                8
-            </button>
+async function registrarMarcacion(tipo) {
 
-            <button class="numero" data-numero="9">
-                9
-            </button>
-
-            <button
-                class="numero"
-                data-numero="0">
-                0
-            </button>
-
-        </div>
-
-    </div>
+    const dni = dniInput.value.trim();
 
 
-    <!-- BOTONES DE MARCACIÓN -->
+    if (dni.length !== 8) {
 
-    <div class="botones">
+        mensaje.innerHTML =
+            "Ingrese un DNI válido de 8 dígitos.";
 
-        <button id="btnEntrada">
-            ✓ ENTRADA
-        </button>
+        return;
 
-        <button id="btnSalida">
-            ↪ SALIDA
-        </button>
-
-    </div>
+    }
 
 
-    <!-- MENSAJE -->
-
-    <div id="mensaje"></div>
-
-</div>
+    mensaje.innerHTML =
+        "Obteniendo ubicación...";
 
 
-<script src="app.js"></script>
-```
+    try {
 
-</body>
+        const ubicacion = await obtenerUbicacion();
 
-</html>
+
+        mensaje.innerHTML =
+            "Registrando marcación...";
+
+
+        const resultado = await llamarSupabase(
+            "registrar_marcacion_con_ubicacion",
+            {
+                p_dni: dni,
+
+                p_tipo: tipo,
+
+                p_latitud: ubicacion.latitud,
+
+                p_longitud: ubicacion.longitud,
+
+                p_precision: ubicacion.precision
+            }
+        );
+
+
+        // ----------------------------------
+        // ERROR
+        // ----------------------------------
+
+        if (!resultado || resultado.ok === false) {
+
+            mensaje.innerHTML =
+                resultado?.mensaje ||
+                "No se pudo registrar la marcación.";
+
+            return;
+        }
+
+
+        // ----------------------------------
+        // ENTRADA
+        // ----------------------------------
+
+        if (tipo === "ENTRADA") {
+
+            if (
+                resultado.minutos_tardanza &&
+                resultado.minutos_tardanza > 0
+            ) {
+
+                mensaje.innerHTML =
+                    `Entrada registrada. Tardanza: ${resultado.minutos_tardanza} minutos.`;
+
+            } else {
+
+                mensaje.innerHTML =
+                    "Entrada registrada correctamente.";
+
+            }
+
+        }
+
+
+        // ----------------------------------
+        // SALIDA
+        // ----------------------------------
+
+        if (tipo === "SALIDA") {
+
+            let texto =
+                "Salida registrada correctamente.";
+
+            if (resultado.horas_trabajadas) {
+
+                texto +=
+                    ` Horas trabajadas: ${resultado.horas_trabajadas}.`;
+
+            }
+
+            if (
+                resultado.horas_extras &&
+                resultado.horas_extras > 0
+            ) {
+
+                texto +=
+                    ` Horas extras: ${resultado.horas_extras}.`;
+
+            }
+
+            mensaje.innerHTML = texto;
+
+        }
+
+
+        // ----------------------------------
+        // LIMPIAR DESPUÉS DE 6 SEGUNDOS
+        // ----------------------------------
+
+        setTimeout(function () {
+
+            limpiarDni();
+
+        }, 6000);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        mensaje.innerHTML =
+            "No se pudo obtener la ubicación. Active el GPS.";
+
+    }
+
+}
+
+
+// ==========================================
+// BOTÓN ENTRADA
+// ==========================================
+
+if (btnEntrada) {
+
+    btnEntrada.addEventListener(
+        "click",
+        function () {
+
+            registrarMarcacion("ENTRADA");
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// BOTÓN SALIDA
+// ==========================================
+
+if (btnSalida) {
+
+    btnSalida.addEventListener(
+        "click",
+        function () {
+
+            registrarMarcacion("SALIDA");
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// RELOJ
+// ==========================================
+
+function actualizarReloj() {
+
+    const ahora = new Date();
+
+    const horas =
+        String(ahora.getHours()).padStart(2, "0");
+
+    const minutos =
+        String(ahora.getMinutes()).padStart(2, "0");
+
+    const segundos =
+        String(ahora.getSeconds()).padStart(2, "0");
+
+
+    if (reloj) {
+
+        reloj.textContent =
+            `${horas}:${minutos}:${segundos}`;
+
+    }
+
+
+    if (fecha) {
+
+        fecha.textContent =
+            ahora.toLocaleDateString(
+                "es-PE",
+                {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric"
+                }
+            );
+
+    }
+
+}
+
+
+actualizarReloj();
+
+setInterval(
+    actualizarReloj,
+    1000
+);
