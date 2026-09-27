@@ -12,6 +12,7 @@ if (sessionStorage.getItem("adminAutorizado") !== "true") {
 // ======================================================
 
 const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
+
 const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 
 
@@ -198,14 +199,11 @@ async function cargarTrabajadores() {
             error
         );
 
-        if (trabajadorSelect) {
-
-            trabajadorSelect.innerHTML = `
-                <option value="">
-                    Error al cargar trabajadores
-                </option>
-            `;
-        }
+        trabajadorSelect.innerHTML = `
+            <option value="">
+                Error al cargar trabajadores
+            </option>
+        `;
     }
 }
 
@@ -250,7 +248,6 @@ async function cargarListaTrabajadores() {
                 document.createElement("tr");
 
 
-            // DNI
             const tdDni =
                 document.createElement("td");
 
@@ -258,7 +255,6 @@ async function cargarListaTrabajadores() {
                 trabajador.dni || "";
 
 
-            // NOMBRE
             const tdNombre =
                 document.createElement("td");
 
@@ -266,7 +262,6 @@ async function cargarListaTrabajadores() {
                 trabajador.nombre || "";
 
 
-            // APELLIDOS
             const tdApellidos =
                 document.createElement("td");
 
@@ -274,7 +269,6 @@ async function cargarListaTrabajadores() {
                 trabajador.apellidos || "";
 
 
-            // ÁREA
             const tdArea =
                 document.createElement("td");
 
@@ -282,7 +276,6 @@ async function cargarListaTrabajadores() {
                 trabajador.area || "";
 
 
-            // CARGO
             const tdCargo =
                 document.createElement("td");
 
@@ -290,7 +283,6 @@ async function cargarListaTrabajadores() {
                 trabajador.cargo || "";
 
 
-            // ESTADO
             const tdEstado =
                 document.createElement("td");
 
@@ -307,7 +299,6 @@ async function cargarListaTrabajadores() {
                     : "#dc3545";
 
 
-            // ACCIÓN
             const tdAccion =
                 document.createElement("td");
 
@@ -377,6 +368,45 @@ async function cargarListaTrabajadores() {
                 </td>
             </tr>
         `;
+    }
+}
+
+
+// ======================================================
+// MOSTRAR FORMULARIO NUEVO TRABAJADOR
+// ======================================================
+
+function mostrarFormularioTrabajador() {
+
+    limpiarFormularioTrabajador();
+
+    if (formularioTrabajador) {
+
+        formularioTrabajador.classList.add(
+            "activo"
+        );
+
+        formularioTrabajador.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+}
+
+
+// ======================================================
+// CANCELAR TRABAJADOR
+// ======================================================
+
+function cancelarTrabajador() {
+
+    limpiarFormularioTrabajador();
+
+    if (formularioTrabajador) {
+
+        formularioTrabajador.classList.remove(
+            "activo"
+        );
     }
 }
 
@@ -552,12 +582,6 @@ async function guardarTrabajador() {
 
         if (id) {
 
-            console.log(
-                "Actualizando trabajador:",
-                id
-            );
-
-
             resultado =
                 await llamarSupabase(
                     "actualizar_trabajador",
@@ -572,13 +596,7 @@ async function guardarTrabajador() {
                     }
                 );
 
-
         } else {
-
-            console.log(
-                "Creando trabajador..."
-            );
-
 
             resultado =
                 await llamarSupabase(
@@ -595,13 +613,6 @@ async function guardarTrabajador() {
         }
 
 
-        console.log(
-            "Respuesta trabajador:",
-            resultado
-        );
-
-
-        // Algunas funciones devuelven objeto JSON
         if (
             resultado &&
             resultado.ok === false
@@ -642,32 +653,18 @@ async function guardarTrabajador() {
             "No se pudo guardar el trabajador.";
 
 
-        try {
+        const texto =
+            error.message || "";
 
-            const texto =
-                error.message || "";
 
-            if (
-                texto.toLowerCase().includes(
-                    "duplicate"
-                ) ||
-                texto.toLowerCase().includes(
-                    "unique"
-                )
-            ) {
+        if (
+            texto.toLowerCase().includes("duplicate") ||
+            texto.toLowerCase().includes("unique")
+        ) {
 
-                mensajeError =
-                    "El DNI ya está registrado.";
-
-            } else if (texto) {
-
-                console.error(
-                    "Detalle:",
-                    texto
-                );
-            }
-
-        } catch (e) {}
+            mensajeError =
+                "El DNI ya está registrado.";
+        }
 
 
         mostrarMensajeTrabajador(
@@ -864,12 +861,6 @@ async function guardarHorario() {
                         horarios
                 }
             );
-
-
-        console.log(
-            "Horario guardado:",
-            resultado
-        );
 
 
         if (
@@ -1126,12 +1117,6 @@ async function consultarReporte() {
         );
 
 
-    const mensajeReporte =
-        document.getElementById(
-            "mensajeReporte"
-        );
-
-
     if (!desde || !hasta) {
 
         mostrarMensajeReporte(
@@ -1166,7 +1151,7 @@ async function consultarReporte() {
 
             lista.innerHTML = `
                 <tr>
-                    <td colspan="9">
+                    <td colspan="10">
                         Consultando información...
                     </td>
                 </tr>
@@ -1228,7 +1213,7 @@ async function consultarReporte() {
 
             lista.innerHTML = `
                 <tr>
-                    <td colspan="9">
+                    <td colspan="10">
                         No se pudo cargar el reporte.
                     </td>
                 </tr>
@@ -1269,7 +1254,7 @@ function mostrarReporte(datos) {
 
         lista.innerHTML = `
             <tr>
-                <td colspan="9">
+                <td colspan="10">
                     No hay registros para el rango seleccionado.
                 </td>
             </tr>
@@ -1373,6 +1358,18 @@ function mostrarReporte(datos) {
             );
 
 
+        const horasExtras =
+            obtenerValor(
+                registro,
+                [
+                    "horas_extra",
+                    "horas_extras",
+                    "hora_extra",
+                    "extras"
+                ]
+            );
+
+
         agregarCelda(
             fila,
             formatearFecha(fecha)
@@ -1430,6 +1427,15 @@ function mostrarReporte(datos) {
             horas === null
                 ? "0"
                 : horas
+        );
+
+
+        agregarCelda(
+            fila,
+            horasExtras === "" ||
+            horasExtras === null
+                ? "0"
+                : horasExtras
         );
 
 
@@ -1602,7 +1608,8 @@ function descargarExcel() {
         "Salida",
         "Estado",
         "Tardanza (min)",
-        "Horas trabajadas"
+        "Horas trabajadas",
+        "Horas extras"
     ];
 
 
@@ -1614,13 +1621,18 @@ function descargarExcel() {
                 formatearFecha(
                     obtenerValor(
                         registro,
-                        ["fecha", "fecha_asistencia"]
+                        [
+                            "fecha",
+                            "fecha_asistencia"
+                        ]
                     )
                 ),
 
                 obtenerValor(
                     registro,
-                    ["dni"]
+                    [
+                        "dni"
+                    ]
                 ),
 
                 obtenerValor(
@@ -1634,26 +1646,36 @@ function descargarExcel() {
 
                 obtenerValor(
                     registro,
-                    ["area"]
+                    [
+                        "area"
+                    ]
                 ),
 
                 formatearHora(
                     obtenerValor(
                         registro,
-                        ["hora_entrada", "entrada"]
+                        [
+                            "hora_entrada",
+                            "entrada"
+                        ]
                     )
                 ),
 
                 formatearHora(
                     obtenerValor(
                         registro,
-                        ["hora_salida", "salida"]
+                        [
+                            "hora_salida",
+                            "salida"
+                        ]
                     )
                 ),
 
                 obtenerValor(
                     registro,
-                    ["estado"]
+                    [
+                        "estado"
+                    ]
                 ),
 
                 obtenerValor(
@@ -1669,6 +1691,16 @@ function descargarExcel() {
                     [
                         "horas_trabajadas",
                         "horas"
+                    ]
+                ),
+
+                obtenerValor(
+                    registro,
+                    [
+                        "horas_extra",
+                        "horas_extras",
+                        "hora_extra",
+                        "extras"
                     ]
                 )
 
@@ -1793,12 +1825,6 @@ async function cargarUsuariosAdmin() {
                 "listar_usuarios_admin",
                 {}
             );
-
-
-        console.log(
-            "Usuarios recibidos:",
-            resultado
-        );
 
 
         lista.innerHTML = "";
@@ -1980,12 +2006,6 @@ async function crearUsuarioAdmin() {
         );
 
 
-    const mensajeUsuario =
-        document.getElementById(
-            "mensajeUsuario"
-        );
-
-
     const usuario =
         campoUsuario?.value.trim() || "";
 
@@ -2055,12 +2075,6 @@ async function crearUsuarioAdmin() {
                     p_rol: rol
                 }
             );
-
-
-        console.log(
-            "Resultado crear usuario:",
-            resultado
-        );
 
 
         if (
