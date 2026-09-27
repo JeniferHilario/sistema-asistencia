@@ -103,10 +103,11 @@ async function cargarTrabajadores() {
                 "listar_trabajadores"
             );
 
-        trabajadorSelect.innerHTML =
-            `<option value="">
+        trabajadorSelect.innerHTML = `
+            <option value="">
                 Seleccione un trabajador
-            </option>`;
+            </option>
+        `;
 
         trabajadores.forEach(
             function (trabajador) {
@@ -314,10 +315,6 @@ function editarTrabajador(
         btnGuardarTrabajador.textContent =
             "ACTUALIZAR TRABAJADOR";
     }
-
-    formularioTrabajador.classList.add(
-        "activo"
-    );
 }
 
 
@@ -364,18 +361,6 @@ async function guardarTrabajador() {
         campoActivo
             ? campoActivo.value === "true"
             : true;
-
-    console.log(
-        "Datos trabajador:",
-        {
-            dni,
-            nombre,
-            apellidos,
-            area,
-            cargo,
-            activo
-        }
-    );
 
     if (
         !dni ||
@@ -441,7 +426,7 @@ async function guardarTrabajador() {
         }
 
         console.log(
-            "Resultado Supabase:",
+            "Resultado:",
             resultado
         );
 
@@ -461,7 +446,7 @@ async function guardarTrabajador() {
     } catch (error) {
 
         console.error(
-            "Error al guardar trabajador:",
+            "Error guardando trabajador:",
             error
         );
 
@@ -474,7 +459,7 @@ async function guardarTrabajador() {
 
 
 // ==========================================
-// LIMPIAR FORMULARIO
+// LIMPIAR FORMULARIO TRABAJADOR
 // ==========================================
 
 function limpiarFormularioTrabajador() {
@@ -532,13 +517,13 @@ function limpiarFormularioTrabajador() {
 
     if (btnGuardarTrabajador) {
         btnGuardarTrabajador.textContent =
-            "💾 GUARDAR TRABAJADOR";
+            "GUARDAR TRABAJADOR";
     }
 }
 
 
 // ==========================================
-// MENSAJE DE TRABAJADOR
+// MENSAJE TRABAJADOR
 // ==========================================
 
 function mostrarMensajeTrabajador(
@@ -554,46 +539,15 @@ function mostrarMensajeTrabajador(
     mensajeTrabajador.style.color =
         color;
 
-    if (color === "green") {
-
-        mensajeTrabajador.style.background =
-            "#d4edda";
-
-    } else {
-
-        mensajeTrabajador.style.background =
-            "#f8d7da";
-    }
+    mensajeTrabajador.style.background =
+        color === "green"
+            ? "#d4edda"
+            : "#f8d7da";
 }
 
 
 // ==========================================
-// OBTENER FECHA POR DÍA
-// ==========================================
-
-function obtenerFechaPorDia(
-    fechaBase,
-    numeroDia
-) {
-
-    const fecha =
-        new Date(
-            fechaBase + "T00:00:00"
-        );
-
-    fecha.setDate(
-        fecha.getDate() +
-        numeroDia
-    );
-
-    return fecha
-        .toISOString()
-        .split("T")[0];
-}
-
-
-// ==========================================
-// GUARDAR HORARIO — CORREGIDO
+// GUARDAR HORARIO
 // ==========================================
 
 async function guardarHorario() {
@@ -649,18 +603,10 @@ async function guardarHorario() {
             "domingo"
         ];
 
-        // ==========================================
-        // IMPORTANTE:
-        // Supabase espera un ARRAY de objetos.
-        // ==========================================
-
         const horarios = [];
 
         dias.forEach(
-            function (
-                dia,
-                indice
-            ) {
+            function (dia, indice) {
 
                 const entrada =
                     document.getElementById(
@@ -683,17 +629,28 @@ async function guardarHorario() {
                 const horaSalida =
                     salida?.value || "";
 
-                /*
-                 * REGLA:
-                 *
-                 * Si el usuario coloca hora de entrada
-                 * y salida, NO es descanso.
-                 *
-                 * Si marca descanso, es descanso.
-                 */
+
+                // ==========================================
+                // CORRECCIÓN IMPORTANTE
+                // ==========================================
+                //
+                // Si existen entrada y salida,
+                // automáticamente NO es descanso.
+                //
+                // Solo será descanso si:
+                // - No hay hora de entrada
+                // - No hay hora de salida
+                // - El checkbox está marcado
+                // ==========================================
+
+                const tieneHorario =
+                    horaEntrada !== "" &&
+                    horaSalida !== "";
 
                 const esDescanso =
+                    !tieneHorario &&
                     descanso?.checked === true;
+
 
                 horarios.push({
 
@@ -712,13 +669,16 @@ async function guardarHorario() {
                     descanso:
                         esDescanso
                 });
+
             }
         );
 
+
         console.log(
-            "HORARIOS ENVIADOS:",
+            "HORARIOS QUE SE ENVIARÁN:",
             horarios
         );
+
 
         const resultado =
             await llamarSupabase(
@@ -735,10 +695,12 @@ async function guardarHorario() {
                 }
             );
 
+
         console.log(
-            "RESPUESTA SUPABASE:",
+            "RESPUESTA DE SUPABASE:",
             resultado
         );
+
 
         if (
             !resultado ||
@@ -751,6 +713,7 @@ async function guardarHorario() {
             );
         }
 
+
         if (mensaje) {
 
             mensaje.textContent =
@@ -762,6 +725,7 @@ async function guardarHorario() {
             mensaje.style.background =
                 "#d4edda";
         }
+
 
     } catch (error) {
 
@@ -864,15 +828,13 @@ async function cargarHorarioExistente() {
                 if (entrada) {
 
                     entrada.value =
-                        horario.hora_entrada ||
-                        "";
+                        horario.hora_entrada || "";
                 }
 
                 if (salida) {
 
                     salida.value =
-                        horario.hora_salida ||
-                        "";
+                        horario.hora_salida || "";
                 }
 
                 if (descanso) {
@@ -955,6 +917,7 @@ if (btnGuardarTrabajador) {
     );
 }
 
+
 if (btnGuardar) {
 
     btnGuardar.addEventListener(
@@ -962,6 +925,7 @@ if (btnGuardar) {
         guardarHorario
     );
 }
+
 
 if (trabajadorSelect) {
 
@@ -975,6 +939,7 @@ if (trabajadorSelect) {
         }
     );
 }
+
 
 if (fechaInicio) {
 
