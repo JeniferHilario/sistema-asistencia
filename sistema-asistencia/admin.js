@@ -260,10 +260,7 @@ function editarTrabajador(
 
     if (!formularioTrabajador) return;
 
-
-    formularioTrabajador.dataset.id =
-        id;
-
+    formularioTrabajador.dataset.id = id;
 
     const campoDni =
         document.getElementById("nuevoDni");
@@ -282,7 +279,6 @@ function editarTrabajador(
 
     const campoActivo =
         document.getElementById("nuevoActivo");
-
 
     if (campoDni) {
         campoDni.value = dni;
@@ -309,18 +305,15 @@ function editarTrabajador(
             activo ? "true" : "false";
     }
 
-
     if (tituloFormulario) {
         tituloFormulario.textContent =
             "Editar trabajador";
     }
 
-
     if (btnGuardarTrabajador) {
         btnGuardarTrabajador.textContent =
             "ACTUALIZAR TRABAJADOR";
     }
-
 
     formularioTrabajador.classList.add(
         "activo"
@@ -352,7 +345,6 @@ async function guardarTrabajador() {
     const campoActivo =
         document.getElementById("nuevoActivo");
 
-
     const dni =
         campoDni?.value.trim() || "";
 
@@ -373,7 +365,6 @@ async function guardarTrabajador() {
             ? campoActivo.value === "true"
             : true;
 
-
     console.log(
         "Datos trabajador:",
         {
@@ -385,9 +376,6 @@ async function guardarTrabajador() {
             activo
         }
     );
-
-
-    // VALIDAR CAMPOS OBLIGATORIOS
 
     if (
         !dni ||
@@ -403,9 +391,6 @@ async function guardarTrabajador() {
         return;
     }
 
-
-    // VALIDAR DNI
-
     if (!/^\d{8}$/.test(dni)) {
 
         mostrarMensajeTrabajador(
@@ -416,19 +401,12 @@ async function guardarTrabajador() {
         return;
     }
 
-
     try {
 
         const id =
             formularioTrabajador?.dataset.id;
 
-
         let resultado;
-
-
-        // ======================================
-        // ACTUALIZAR
-        // ======================================
 
         if (id) {
 
@@ -446,13 +424,7 @@ async function guardarTrabajador() {
                     }
                 );
 
-        }
-
-        // ======================================
-        // CREAR
-        // ======================================
-
-        else {
+        } else {
 
             resultado =
                 await llamarSupabase(
@@ -468,16 +440,10 @@ async function guardarTrabajador() {
                 );
         }
 
-
         console.log(
             "Resultado Supabase:",
             resultado
         );
-
-
-        // ======================================
-        // ÉXITO
-        // ======================================
 
         mostrarMensajeTrabajador(
             id
@@ -486,18 +452,11 @@ async function guardarTrabajador() {
             "green"
         );
 
-
-        // LIMPIAR SIN USAR .RESET()
-
         limpiarFormularioTrabajador();
-
-
-        // ACTUALIZAR LISTAS
 
         await cargarTrabajadores();
 
         await cargarListaTrabajadores();
-
 
     } catch (error) {
 
@@ -505,7 +464,6 @@ async function guardarTrabajador() {
             "Error al guardar trabajador:",
             error
         );
-
 
         mostrarMensajeTrabajador(
             "No se pudo guardar el trabajador.",
@@ -539,9 +497,6 @@ function limpiarFormularioTrabajador() {
     const campoActivo =
         document.getElementById("nuevoActivo");
 
-
-    // LIMPIAR CADA CAMPO
-
     if (campoDni) {
         campoDni.value = "";
     }
@@ -566,28 +521,16 @@ function limpiarFormularioTrabajador() {
         campoActivo.value = "true";
     }
 
-
-    // QUITAR ID DE EDICIÓN
-
     if (formularioTrabajador) {
-
         delete formularioTrabajador.dataset.id;
     }
 
-
-    // RESTAURAR TÍTULO
-
     if (tituloFormulario) {
-
         tituloFormulario.textContent =
             "Nuevo trabajador";
     }
 
-
-    // RESTAURAR BOTÓN
-
     if (btnGuardarTrabajador) {
-
         btnGuardarTrabajador.textContent =
             "💾 GUARDAR TRABAJADOR";
     }
@@ -605,14 +548,11 @@ function mostrarMensajeTrabajador(
 
     if (!mensajeTrabajador) return;
 
-
     mensajeTrabajador.textContent =
         texto;
 
-
     mensajeTrabajador.style.color =
         color;
-
 
     if (color === "green") {
 
@@ -641,12 +581,10 @@ function obtenerFechaPorDia(
             fechaBase + "T00:00:00"
         );
 
-
     fecha.setDate(
         fecha.getDate() +
         numeroDia
     );
-
 
     return fecha
         .toISOString()
@@ -655,7 +593,7 @@ function obtenerFechaPorDia(
 
 
 // ==========================================
-// GUARDAR HORARIO
+// GUARDAR HORARIO — CORREGIDO
 // ==========================================
 
 async function guardarHorario() {
@@ -665,13 +603,11 @@ async function guardarHorario() {
         !fechaInicio
     ) return;
 
-
     const trabajadorId =
         trabajadorSelect.value;
 
     const fechaBase =
         fechaInicio.value;
-
 
     if (!trabajadorId) {
 
@@ -687,7 +623,6 @@ async function guardarHorario() {
         return;
     }
 
-
     if (!fechaBase) {
 
         if (mensaje) {
@@ -702,7 +637,6 @@ async function guardarHorario() {
         return;
     }
 
-
     try {
 
         const dias = [
@@ -715,9 +649,12 @@ async function guardarHorario() {
             "domingo"
         ];
 
+        // ==========================================
+        // IMPORTANTE:
+        // Supabase espera un ARRAY de objetos.
+        // ==========================================
 
-        const horarios = {};
-
+        const horarios = [];
 
         dias.forEach(
             function (
@@ -740,30 +677,48 @@ async function guardarHorario() {
                         `${dia}Descanso`
                     );
 
+                const horaEntrada =
+                    entrada?.value || "";
 
-                horarios[dia] = {
+                const horaSalida =
+                    salida?.value || "";
 
-                    fecha:
-                        obtenerFechaPorDia(
-                            fechaBase,
-                            indice
-                        ),
+                /*
+                 * REGLA:
+                 *
+                 * Si el usuario coloca hora de entrada
+                 * y salida, NO es descanso.
+                 *
+                 * Si marca descanso, es descanso.
+                 */
+
+                const esDescanso =
+                    descanso?.checked === true;
+
+                horarios.push({
+
+                    dia: indice,
 
                     hora_entrada:
-                        entrada?.value ||
-                        null,
+                        esDescanso
+                            ? ""
+                            : horaEntrada,
 
                     hora_salida:
-                        salida?.value ||
-                        null,
+                        esDescanso
+                            ? ""
+                            : horaSalida,
 
                     descanso:
-                        descanso?.checked ||
-                        false
-                };
+                        esDescanso
+                });
             }
         );
 
+        console.log(
+            "HORARIOS ENVIADOS:",
+            horarios
+        );
 
         const resultado =
             await llamarSupabase(
@@ -780,12 +735,21 @@ async function guardarHorario() {
                 }
             );
 
-
         console.log(
-            "Horario guardado:",
+            "RESPUESTA SUPABASE:",
             resultado
         );
 
+        if (
+            !resultado ||
+            resultado.ok !== true
+        ) {
+
+            throw new Error(
+                resultado?.mensaje ||
+                "No se pudo guardar el horario."
+            );
+        }
 
         if (mensaje) {
 
@@ -799,14 +763,12 @@ async function guardarHorario() {
                 "#d4edda";
         }
 
-
     } catch (error) {
 
         console.error(
             "Error guardando horario:",
             error
         );
-
 
         if (mensaje) {
 
@@ -834,19 +796,16 @@ async function cargarHorarioExistente() {
         !fechaInicio
     ) return;
 
-
     const trabajadorId =
         trabajadorSelect.value;
 
     const fechaBase =
         fechaInicio.value;
 
-
     if (
         !trabajadorId ||
         !fechaBase
     ) return;
-
 
     try {
 
@@ -862,15 +821,12 @@ async function cargarHorarioExistente() {
                 }
             );
 
-
         console.log(
             "Horario existente:",
             resultado
         );
 
-
         if (!resultado) return;
-
 
         const dias = [
             "lunes",
@@ -882,16 +838,13 @@ async function cargarHorarioExistente() {
             "domingo"
         ];
 
-
         dias.forEach(
             function (dia) {
 
                 const horario =
                     resultado[dia];
 
-
                 if (!horario) return;
-
 
                 const entrada =
                     document.getElementById(
@@ -908,14 +861,12 @@ async function cargarHorarioExistente() {
                         `${dia}Descanso`
                     );
 
-
                 if (entrada) {
 
                     entrada.value =
                         horario.hora_entrada ||
                         "";
                 }
-
 
                 if (salida) {
 
@@ -924,16 +875,13 @@ async function cargarHorarioExistente() {
                         "";
                 }
 
-
                 if (descanso) {
 
                     descanso.checked =
-                        horario.descanso ||
-                        false;
+                        horario.descanso === true;
                 }
             }
         );
-
 
     } catch (error) {
 
@@ -961,7 +909,6 @@ function limpiarHorarios() {
         "domingo"
     ];
 
-
     dias.forEach(
         function (dia) {
 
@@ -979,7 +926,6 @@ function limpiarHorarios() {
                 document.getElementById(
                     `${dia}Descanso`
                 );
-
 
             if (entrada) {
                 entrada.value = "";
@@ -1009,7 +955,6 @@ if (btnGuardarTrabajador) {
     );
 }
 
-
 if (btnGuardar) {
 
     btnGuardar.addEventListener(
@@ -1017,7 +962,6 @@ if (btnGuardar) {
         guardarHorario
     );
 }
-
 
 if (trabajadorSelect) {
 
@@ -1031,7 +975,6 @@ if (trabajadorSelect) {
         }
     );
 }
-
 
 if (fechaInicio) {
 
