@@ -19,41 +19,68 @@ const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 // ELEMENTOS
 // ===============================
 
-const formularioTrabajador = document.getElementById("formularioTrabajador");
-const btnGuardarTrabajador = document.getElementById("btnGuardarTrabajador");
-const listaTrabajadores = document.getElementById("listaTrabajadores");
-const mensajeTrabajador = document.getElementById("mensajeTrabajador");
+const formularioTrabajador =
+    document.getElementById("formularioTrabajador");
 
-const trabajadorSelect = document.getElementById("trabajador");
-const fechaInicio = document.getElementById("fechaInicio");
+const btnGuardarTrabajador =
+    document.getElementById("btnGuardarTrabajador");
 
-const mensaje = document.getElementById("mensaje");
-const btnGuardar = document.getElementById("btnGuardar");
-const tituloFormulario = document.getElementById("tituloFormulario");
+const listaTrabajadores =
+    document.getElementById("listaTrabajadores");
+
+const mensajeTrabajador =
+    document.getElementById("mensajeTrabajador");
+
+const trabajadorSelect =
+    document.getElementById("trabajador");
+
+const fechaInicio =
+    document.getElementById("fechaInicio");
+
+const mensaje =
+    document.getElementById("mensaje");
+
+const btnGuardar =
+    document.getElementById("btnGuardar");
+
+const tituloFormulario =
+    document.getElementById("tituloFormulario");
 
 
 // ===============================
 // FUNCIÓN GENERAL SUPABASE
 // ===============================
 
-async function llamarSupabase(nombreFuncion, parametros = {}) {
+async function llamarSupabase(
+    nombreFuncion,
+    parametros = {}
+) {
 
     const respuesta = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/${nombreFuncion}`,
         {
             method: "POST",
+
             headers: {
                 "Content-Type": "application/json",
                 "apikey": SUPABASE_KEY,
                 "Authorization": `Bearer ${SUPABASE_KEY}`
             },
+
             body: JSON.stringify(parametros)
         }
     );
 
     if (!respuesta.ok) {
-        const errorTexto = await respuesta.text();
-        console.error("Error Supabase:", errorTexto);
+
+        const errorTexto =
+            await respuesta.text();
+
+        console.error(
+            "Error Supabase:",
+            errorTexto
+        );
+
         throw new Error(errorTexto);
     }
 
@@ -61,9 +88,9 @@ async function llamarSupabase(nombreFuncion, parametros = {}) {
 }
 
 
-// ===============================
-// CARGAR TRABAJADORES EN SELECT
-// ===============================
+// =====================================================
+// CARGAR TRABAJADORES EN EL SELECT DE HORARIOS
+// =====================================================
 
 async function cargarTrabajadores() {
 
@@ -71,40 +98,52 @@ async function cargarTrabajadores() {
 
     try {
 
-        const trabajadores = await llamarSupabase(
-            "listar_trabajadores"
-        );
+        const trabajadores =
+            await llamarSupabase(
+                "listar_trabajadores"
+            );
 
         trabajadorSelect.innerHTML =
-            '<option value="">Seleccione trabajador</option>';
+            `<option value="">
+                Seleccione un trabajador
+            </option>`;
 
-        trabajadores.forEach(function (trabajador) {
+        trabajadores.forEach(
+            function (trabajador) {
 
-            const opcion = document.createElement("option");
+                const opcion =
+                    document.createElement("option");
 
-            opcion.value = trabajador.id;
+                opcion.value =
+                    trabajador.id;
 
-            opcion.textContent =
-                `${trabajador.dni} - ${trabajador.nombre} ${trabajador.apellidos}`;
+                opcion.textContent =
+                    `${trabajador.dni} - ${trabajador.nombre} ${trabajador.apellidos}`;
 
-            trabajadorSelect.appendChild(opcion);
-        });
+                trabajadorSelect.appendChild(
+                    opcion
+                );
+            }
+        );
 
     } catch (error) {
 
         console.error(error);
 
         if (mensaje) {
+
             mensaje.textContent =
                 "No se pudieron cargar los trabajadores.";
+
+            mensaje.style.color = "red";
         }
     }
 }
 
 
-// ===============================
+// =====================================================
 // CARGAR LISTA DE TRABAJADORES
-// ===============================
+// =====================================================
 
 async function cargarListaTrabajadores() {
 
@@ -112,17 +151,21 @@ async function cargarListaTrabajadores() {
 
     try {
 
-        const trabajadores = await llamarSupabase(
-            "listar_todos_trabajadores"
-        );
+        const trabajadores =
+            await llamarSupabase(
+                "listar_todos_trabajadores"
+            );
 
         listaTrabajadores.innerHTML = "";
 
-        if (!trabajadores || trabajadores.length === 0) {
+        if (
+            !trabajadores ||
+            trabajadores.length === 0
+        ) {
 
             listaTrabajadores.innerHTML = `
                 <tr>
-                    <td colspan="7">
+                    <td colspan="6">
                         No hay trabajadores registrados.
                     </td>
                 </tr>
@@ -131,37 +174,71 @@ async function cargarListaTrabajadores() {
             return;
         }
 
-        trabajadores.forEach(function (trabajador) {
+        trabajadores.forEach(
+            function (trabajador) {
 
-            const fila = document.createElement("tr");
+                const fila =
+                    document.createElement("tr");
 
-            fila.innerHTML = `
-                <td>${trabajador.dni || ""}</td>
-                <td>${trabajador.nombre || ""}</td>
-                <td>${trabajador.apellidos || ""}</td>
-                <td>${trabajador.area || ""}</td>
-                <td>${trabajador.cargo || ""}</td>
-                <td>${trabajador.activo ? "Activo" : "Inactivo"}</td>
+                fila.innerHTML = `
+                    <td>
+                        ${trabajador.dni || ""}
+                    </td>
 
-                <td>
-                    <button
-                        type="button"
-                        onclick="editarTrabajador(
-                            '${trabajador.id}',
-                            '${trabajador.dni || ""}',
-                            '${trabajador.nombre || ""}',
-                            '${trabajador.apellidos || ""}',
-                            '${trabajador.area || ""}',
-                            '${trabajador.cargo || ""}',
-                            ${trabajador.activo}
-                        )">
-                        Editar
-                    </button>
-                </td>
-            `;
+                    <td>
+                        ${trabajador.nombre || ""}
+                        ${trabajador.apellidos || ""}
+                    </td>
 
-            listaTrabajadores.appendChild(fila);
-        });
+                    <td>
+                        ${trabajador.area || ""}
+                    </td>
+
+                    <td>
+                        ${trabajador.cargo || ""}
+                    </td>
+
+                    <td class="${
+                        trabajador.activo
+                            ? "activo"
+                            : "inactivo"
+                    }">
+
+                        ${
+                            trabajador.activo
+                                ? "Activo"
+                                : "Inactivo"
+                        }
+
+                    </td>
+
+                    <td>
+
+                        <button
+                            type="button"
+                            class="btn-editar"
+                            onclick="editarTrabajador(
+                                '${trabajador.id}',
+                                '${trabajador.dni || ""}',
+                                '${trabajador.nombre || ""}',
+                                '${trabajador.apellidos || ""}',
+                                '${trabajador.area || ""}',
+                                '${trabajador.cargo || ""}',
+                                ${trabajador.activo}
+                            )">
+
+                            EDITAR
+
+                        </button>
+
+                    </td>
+                `;
+
+                listaTrabajadores.appendChild(
+                    fila
+                );
+            }
+        );
 
     } catch (error) {
 
@@ -169,7 +246,7 @@ async function cargarListaTrabajadores() {
 
         listaTrabajadores.innerHTML = `
             <tr>
-                <td colspan="7">
+                <td colspan="6">
                     Error al cargar trabajadores.
                 </td>
             </tr>
@@ -178,9 +255,9 @@ async function cargarListaTrabajadores() {
 }
 
 
-// ===============================
+// =====================================================
 // EDITAR TRABAJADOR
-// ===============================
+// =====================================================
 
 function editarTrabajador(
     id,
@@ -194,60 +271,157 @@ function editarTrabajador(
 
     if (!formularioTrabajador) return;
 
-    formularioTrabajador.dataset.id = id;
+    formularioTrabajador.dataset.id =
+        id;
 
-    const campoDni = document.getElementById("dniTrabajador");
-    const campoNombre = document.getElementById("nombreTrabajador");
-    const campoApellidos = document.getElementById("apellidosTrabajador");
-    const campoArea = document.getElementById("areaTrabajador");
-    const campoCargo = document.getElementById("cargoTrabajador");
-    const campoActivo = document.getElementById("activoTrabajador");
+    const campoDni =
+        document.getElementById("nuevoDni");
 
-    if (campoDni) campoDni.value = dni;
-    if (campoNombre) campoNombre.value = nombre;
-    if (campoApellidos) campoApellidos.value = apellidos;
-    if (campoArea) campoArea.value = area;
-    if (campoCargo) campoCargo.value = cargo;
+    const campoNombre =
+        document.getElementById("nuevoNombre");
 
-    if (campoActivo) {
-        campoActivo.checked = activo;
+    const campoApellidos =
+        document.getElementById("nuevoApellidos");
+
+    const campoArea =
+        document.getElementById("nuevoArea");
+
+    const campoCargo =
+        document.getElementById("nuevoCargo");
+
+    const campoActivo =
+        document.getElementById("nuevoActivo");
+
+
+    if (campoDni) {
+
+        campoDni.value =
+            dni;
     }
 
+    if (campoNombre) {
+
+        campoNombre.value =
+            nombre;
+    }
+
+    if (campoApellidos) {
+
+        campoApellidos.value =
+            apellidos;
+    }
+
+    if (campoArea) {
+
+        campoArea.value =
+            area;
+    }
+
+    if (campoCargo) {
+
+        campoCargo.value =
+            cargo;
+    }
+
+    if (campoActivo) {
+
+        campoActivo.value =
+            activo
+                ? "true"
+                : "false";
+    }
+
+
     if (tituloFormulario) {
+
         tituloFormulario.textContent =
             "Editar trabajador";
     }
 
+
     if (btnGuardarTrabajador) {
+
         btnGuardarTrabajador.textContent =
-            "Actualizar trabajador";
+            "ACTUALIZAR TRABAJADOR";
     }
 
-    formularioTrabajador.style.display = "block";
+
+    formularioTrabajador.classList.add(
+        "activo"
+    );
 }
 
 
-// ===============================
+// =====================================================
 // GUARDAR / ACTUALIZAR TRABAJADOR
-// ===============================
+// =====================================================
 
 async function guardarTrabajador() {
 
-    const campoDni = document.getElementById("dniTrabajador");
-    const campoNombre = document.getElementById("nombreTrabajador");
-    const campoApellidos = document.getElementById("apellidosTrabajador");
-    const campoArea = document.getElementById("areaTrabajador");
-    const campoCargo = document.getElementById("cargoTrabajador");
-    const campoActivo = document.getElementById("activoTrabajador");
+    // CAMPOS CORRECTOS DE TU HTML
 
-    const dni = campoDni?.value.trim() || "";
-    const nombre = campoNombre?.value.trim() || "";
-    const apellidos = campoApellidos?.value.trim() || "";
-    const area = campoArea?.value.trim() || "";
-    const cargo = campoCargo?.value.trim() || "";
-    const activo = campoActivo ? campoActivo.checked : true;
+    const campoDni =
+        document.getElementById("nuevoDni");
 
-    if (!dni || !nombre || !apellidos) {
+    const campoNombre =
+        document.getElementById("nuevoNombre");
+
+    const campoApellidos =
+        document.getElementById("nuevoApellidos");
+
+    const campoArea =
+        document.getElementById("nuevoArea");
+
+    const campoCargo =
+        document.getElementById("nuevoCargo");
+
+    const campoActivo =
+        document.getElementById("nuevoActivo");
+
+
+    // OBTENER VALORES
+
+    const dni =
+        campoDni?.value.trim() || "";
+
+    const nombre =
+        campoNombre?.value.trim() || "";
+
+    const apellidos =
+        campoApellidos?.value.trim() || "";
+
+    const area =
+        campoArea?.value.trim() || "";
+
+    const cargo =
+        campoCargo?.value.trim() || "";
+
+    const activo =
+        campoActivo
+            ? campoActivo.value === "true"
+            : true;
+
+
+    console.log(
+        "Datos trabajador:",
+        {
+            dni,
+            nombre,
+            apellidos,
+            area,
+            cargo,
+            activo
+        }
+    );
+
+
+    // VALIDACIÓN
+
+    if (
+        !dni ||
+        !nombre ||
+        !apellidos
+    ) {
 
         mostrarMensajeTrabajador(
             "Complete DNI, nombre y apellidos.",
@@ -257,43 +431,84 @@ async function guardarTrabajador() {
         return;
     }
 
+
+    // VALIDAR DNI
+
+    if (
+        !/^\d{8}$/.test(dni)
+    ) {
+
+        mostrarMensajeTrabajador(
+            "El DNI debe tener exactamente 8 dígitos.",
+            "red"
+        );
+
+        return;
+    }
+
+
     try {
 
-        const id = formularioTrabajador?.dataset.id;
+        const id =
+            formularioTrabajador?.dataset.id;
+
 
         let resultado;
 
+
+        // =================================
+        // ACTUALIZAR
+        // =================================
+
         if (id) {
 
-            resultado = await llamarSupabase(
-                "actualizar_trabajador",
-                {
-                    p_id: id,
-                    p_dni: dni,
-                    p_nombre: nombre,
-                    p_apellidos: apellidos,
-                    p_area: area,
-                    p_cargo: cargo,
-                    p_activo: activo
-                }
-            );
+            resultado =
+                await llamarSupabase(
+                    "actualizar_trabajador",
+                    {
+                        p_id: id,
+                        p_dni: dni,
+                        p_nombre: nombre,
+                        p_apellidos: apellidos,
+                        p_area: area,
+                        p_cargo: cargo,
+                        p_activo: activo
+                    }
+                );
 
-        } else {
-
-            resultado = await llamarSupabase(
-                "crear_trabajador",
-                {
-                    p_dni: dni,
-                    p_nombre: nombre,
-                    p_apellidos: apellidos,
-                    p_area: area,
-                    p_cargo: cargo,
-                    p_activo: activo
-                }
-            );
         }
 
-        console.log("Resultado:", resultado);
+        // =================================
+        // CREAR
+        // =================================
+
+        else {
+
+            resultado =
+                await llamarSupabase(
+                    "crear_trabajador",
+                    {
+                        p_dni: dni,
+                        p_nombre: nombre,
+                        p_apellidos: apellidos,
+                        p_area: area,
+                        p_cargo: cargo,
+                        p_activo: activo
+                    }
+                );
+
+        }
+
+
+        console.log(
+            "Resultado Supabase:",
+            resultado
+        );
+
+
+        // =================================
+        // MENSAJE DE ÉXITO
+        // =================================
 
         mostrarMensajeTrabajador(
             id
@@ -302,14 +517,26 @@ async function guardarTrabajador() {
             "green"
         );
 
+
+        // LIMPIAR
+
         limpiarFormularioTrabajador();
 
+
+        // ACTUALIZAR LISTAS
+
         await cargarTrabajadores();
+
         await cargarListaTrabajadores();
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error al guardar trabajador:",
+            error
+        );
+
 
         mostrarMensajeTrabajador(
             "No se pudo guardar el trabajador.",
@@ -319,93 +546,150 @@ async function guardarTrabajador() {
 }
 
 
-// ===============================
+// =====================================================
 // LIMPIAR FORMULARIO
-// ===============================
+// =====================================================
 
 function limpiarFormularioTrabajador() {
 
     if (!formularioTrabajador) return;
 
+
     formularioTrabajador.reset();
+
 
     delete formularioTrabajador.dataset.id;
 
+
     if (tituloFormulario) {
+
         tituloFormulario.textContent =
-            "Registrar trabajador";
+            "Nuevo trabajador";
     }
 
+
     if (btnGuardarTrabajador) {
+
         btnGuardarTrabajador.textContent =
-            "Guardar trabajador";
+            "💾 GUARDAR TRABAJADOR";
     }
 }
 
 
-// ===============================
-// MENSAJE TRABAJADOR
-// ===============================
+// =====================================================
+// MOSTRAR MENSAJE
+// =====================================================
 
-function mostrarMensajeTrabajador(texto, color) {
+function mostrarMensajeTrabajador(
+    texto,
+    color
+) {
 
     if (!mensajeTrabajador) return;
 
-    mensajeTrabajador.textContent = texto;
-    mensajeTrabajador.style.color = color;
+
+    mensajeTrabajador.textContent =
+        texto;
+
+
+    mensajeTrabajador.style.color =
+        color;
+
+
+    if (color === "green") {
+
+        mensajeTrabajador.style.background =
+            "#d4edda";
+
+    } else {
+
+        mensajeTrabajador.style.background =
+            "#f8d7da";
+    }
 }
 
 
-// ===============================
+// =====================================================
 // FECHA DE CADA DÍA
-// ===============================
+// =====================================================
 
-function obtenerFechaPorDia(fechaBase, numeroDia) {
+function obtenerFechaPorDia(
+    fechaBase,
+    numeroDia
+) {
 
-    const fecha = new Date(fechaBase + "T00:00:00");
+    const fecha =
+        new Date(
+            fechaBase + "T00:00:00"
+        );
+
 
     fecha.setDate(
-        fecha.getDate() + numeroDia
+        fecha.getDate() +
+        numeroDia
     );
 
-    return fecha.toISOString().split("T")[0];
+
+    return fecha
+        .toISOString()
+        .split("T")[0];
 }
 
 
-// ===============================
+// =====================================================
 // GUARDAR HORARIO SEMANAL
-// ===============================
+// =====================================================
 
 async function guardarHorario() {
 
-    if (!trabajadorSelect || !fechaInicio) return;
+    if (
+        !trabajadorSelect ||
+        !fechaInicio
+    ) return;
 
-    const trabajadorId = trabajadorSelect.value;
-    const fechaBase = fechaInicio.value;
+
+    const trabajadorId =
+        trabajadorSelect.value;
+
+
+    const fechaBase =
+        fechaInicio.value;
+
 
     if (!trabajadorId) {
 
         if (mensaje) {
+
             mensaje.textContent =
                 "Seleccione un trabajador.";
+
+            mensaje.style.color =
+                "red";
         }
 
         return;
     }
+
 
     if (!fechaBase) {
 
         if (mensaje) {
+
             mensaje.textContent =
                 "Seleccione la fecha de inicio.";
+
+            mensaje.style.color =
+                "red";
         }
 
         return;
     }
 
+
     try {
 
         const dias = [
+
             "lunes",
             "martes",
             "miercoles",
@@ -413,85 +697,142 @@ async function guardarHorario() {
             "viernes",
             "sabado",
             "domingo"
+
         ];
+
 
         const horarios = {};
 
-        dias.forEach(function (dia, indice) {
 
-            const entrada =
-                document.getElementById(`${dia}Entrada`);
+        dias.forEach(
+            function (
+                dia,
+                indice
+            ) {
 
-            const salida =
-                document.getElementById(`${dia}Salida`);
+                const entrada =
+                    document.getElementById(
+                        `${dia}Entrada`
+                    );
 
-            const descanso =
-                document.getElementById(`${dia}Descanso`);
 
-            horarios[dia] = {
-                fecha: obtenerFechaPorDia(
-                    fechaBase,
-                    indice
-                ),
-                hora_entrada:
-                    entrada?.value || null,
-                hora_salida:
-                    salida?.value || null,
-                descanso:
-                    descanso?.checked || false
-            };
-        });
+                const salida =
+                    document.getElementById(
+                        `${dia}Salida`
+                    );
+
+
+                const descanso =
+                    document.getElementById(
+                        `${dia}Descanso`
+                    );
+
+
+                horarios[dia] = {
+
+                    fecha:
+                        obtenerFechaPorDia(
+                            fechaBase,
+                            indice
+                        ),
+
+                    hora_entrada:
+                        entrada?.value ||
+                        null,
+
+                    hora_salida:
+                        salida?.value ||
+                        null,
+
+                    descanso:
+                        descanso?.checked ||
+                        false
+                };
+
+            }
+        );
+
 
         const resultado =
             await llamarSupabase(
                 "guardar_horario_semanal",
                 {
-                    p_trabajador_id: trabajadorId,
-                    p_fecha_inicio: fechaBase,
-                    p_horarios: horarios
+                    p_trabajador_id:
+                        trabajadorId,
+
+                    p_fecha_inicio:
+                        fechaBase,
+
+                    p_horarios:
+                        horarios
                 }
             );
 
-        console.log(resultado);
+
+        console.log(
+            "Horario guardado:",
+            resultado
+        );
+
 
         if (mensaje) {
 
             mensaje.textContent =
                 "Horario semanal guardado correctamente.";
 
-            mensaje.style.color = "green";
+            mensaje.style.color =
+                "green";
+
+            mensaje.style.background =
+                "#d4edda";
         }
+
 
     } catch (error) {
 
         console.error(error);
+
 
         if (mensaje) {
 
             mensaje.textContent =
                 "No se pudo guardar el horario.";
 
-            mensaje.style.color = "red";
+            mensaje.style.color =
+                "red";
+
+            mensaje.style.background =
+                "#f8d7da";
         }
     }
 }
 
 
-// ===============================
+// =====================================================
 // CARGAR HORARIO EXISTENTE
-// ===============================
+// =====================================================
 
 async function cargarHorarioExistente() {
 
-    if (!trabajadorSelect || !fechaInicio) return;
+    if (
+        !trabajadorSelect ||
+        !fechaInicio
+    ) return;
+
 
     const trabajadorId =
         trabajadorSelect.value;
 
+
     const fechaBase =
         fechaInicio.value;
 
-    if (!trabajadorId || !fechaBase) return;
+
+    if (
+        !trabajadorId ||
+        !fechaBase
+    ) return;
+
 
     try {
 
@@ -499,19 +840,26 @@ async function cargarHorarioExistente() {
             await llamarSupabase(
                 "obtener_horario_semanal",
                 {
-                    p_trabajador_id: trabajadorId,
-                    p_fecha_inicio: fechaBase
+                    p_trabajador_id:
+                        trabajadorId,
+
+                    p_fecha_inicio:
+                        fechaBase
                 }
             );
+
 
         console.log(
             "Horario existente:",
             resultado
         );
 
+
         if (!resultado) return;
 
+
         const dias = [
+
             "lunes",
             "martes",
             "miercoles",
@@ -519,39 +867,64 @@ async function cargarHorarioExistente() {
             "viernes",
             "sabado",
             "domingo"
+
         ];
 
-        dias.forEach(function (dia) {
 
-            const horario =
-                resultado[dia];
+        dias.forEach(
+            function (dia) {
 
-            if (!horario) return;
+                const horario =
+                    resultado[dia];
 
-            const entrada =
-                document.getElementById(`${dia}Entrada`);
 
-            const salida =
-                document.getElementById(`${dia}Salida`);
+                if (!horario) return;
 
-            const descanso =
-                document.getElementById(`${dia}Descanso`);
 
-            if (entrada) {
-                entrada.value =
-                    horario.hora_entrada || "";
+                const entrada =
+                    document.getElementById(
+                        `${dia}Entrada`
+                    );
+
+
+                const salida =
+                    document.getElementById(
+                        `${dia}Salida`
+                    );
+
+
+                const descanso =
+                    document.getElementById(
+                        `${dia}Descanso`
+                    );
+
+
+                if (entrada) {
+
+                    entrada.value =
+                        horario.hora_entrada ||
+                        "";
+                }
+
+
+                if (salida) {
+
+                    salida.value =
+                        horario.hora_salida ||
+                        "";
+                }
+
+
+                if (descanso) {
+
+                    descanso.checked =
+                        horario.descanso ||
+                        false;
+                }
+
             }
+        );
 
-            if (salida) {
-                salida.value =
-                    horario.hora_salida || "";
-            }
-
-            if (descanso) {
-                descanso.checked =
-                    horario.descanso || false;
-            }
-        });
 
     } catch (error) {
 
@@ -563,13 +936,14 @@ async function cargarHorarioExistente() {
 }
 
 
-// ===============================
+// =====================================================
 // LIMPIAR HORARIOS
-// ===============================
+// =====================================================
 
 function limpiarHorarios() {
 
     const dias = [
+
         "lunes",
         "martes",
         "miercoles",
@@ -577,31 +951,57 @@ function limpiarHorarios() {
         "viernes",
         "sabado",
         "domingo"
+
     ];
 
-    dias.forEach(function (dia) {
 
-        const entrada =
-            document.getElementById(`${dia}Entrada`);
+    dias.forEach(
+        function (dia) {
 
-        const salida =
-            document.getElementById(`${dia}Salida`);
+            const entrada =
+                document.getElementById(
+                    `${dia}Entrada`
+                );
 
-        const descanso =
-            document.getElementById(`${dia}Descanso`);
 
-        if (entrada) entrada.value = "";
+            const salida =
+                document.getElementById(
+                    `${dia}Salida`
+                );
 
-        if (salida) salida.value = "";
 
-        if (descanso) descanso.checked = false;
-    });
+            const descanso =
+                document.getElementById(
+                    `${dia}Descanso`
+                );
+
+
+            if (entrada) {
+
+                entrada.value = "";
+            }
+
+
+            if (salida) {
+
+                salida.value = "";
+            }
+
+
+            if (descanso) {
+
+                descanso.checked =
+                    false;
+            }
+
+        }
+    );
 }
 
 
-// ===============================
+// =====================================================
 // EVENTOS
-// ===============================
+// =====================================================
 
 if (btnGuardarTrabajador) {
 
@@ -611,6 +1011,7 @@ if (btnGuardarTrabajador) {
     );
 }
 
+
 if (btnGuardar) {
 
     btnGuardar.addEventListener(
@@ -618,6 +1019,7 @@ if (btnGuardar) {
         guardarHorario
     );
 }
+
 
 if (trabajadorSelect) {
 
@@ -631,6 +1033,7 @@ if (trabajadorSelect) {
         }
     );
 }
+
 
 if (fechaInicio) {
 
@@ -646,9 +1049,9 @@ if (fechaInicio) {
 }
 
 
-// ===============================
+// =====================================================
 // INICIO
-// ===============================
+// =====================================================
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -657,5 +1060,6 @@ document.addEventListener(
         cargarTrabajadores();
 
         cargarListaTrabajadores();
+
     }
 );
