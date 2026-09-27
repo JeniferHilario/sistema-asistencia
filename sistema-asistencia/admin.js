@@ -1,23 +1,23 @@
-// ===============================
+// ==========================================
 // PROTECCIÓN DE ACCESO
-// ===============================
+// ==========================================
 
 if (sessionStorage.getItem("adminAutorizado") !== "true") {
     window.location.href = "login.html";
 }
 
 
-// ===============================
+// ==========================================
 // SUPABASE
-// ===============================
+// ==========================================
 
 const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
 const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
 
 
-// ===============================
+// ==========================================
 // ELEMENTOS
-// ===============================
+// ==========================================
 
 const formularioTrabajador =
     document.getElementById("formularioTrabajador");
@@ -47,9 +47,9 @@ const tituloFormulario =
     document.getElementById("tituloFormulario");
 
 
-// ===============================
-// FUNCIÓN GENERAL SUPABASE
-// ===============================
+// ==========================================
+// LLAMAR SUPABASE
+// ==========================================
 
 async function llamarSupabase(
     nombreFuncion,
@@ -88,9 +88,9 @@ async function llamarSupabase(
 }
 
 
-// =====================================================
-// CARGAR TRABAJADORES EN EL SELECT DE HORARIOS
-// =====================================================
+// ==========================================
+// CARGAR TRABAJADORES
+// ==========================================
 
 async function cargarTrabajadores() {
 
@@ -128,22 +128,17 @@ async function cargarTrabajadores() {
 
     } catch (error) {
 
-        console.error(error);
-
-        if (mensaje) {
-
-            mensaje.textContent =
-                "No se pudieron cargar los trabajadores.";
-
-            mensaje.style.color = "red";
-        }
+        console.error(
+            "Error cargando trabajadores:",
+            error
+        );
     }
 }
 
 
-// =====================================================
+// ==========================================
 // CARGAR LISTA DE TRABAJADORES
-// =====================================================
+// ==========================================
 
 async function cargarListaTrabajadores() {
 
@@ -198,22 +193,15 @@ async function cargarListaTrabajadores() {
                         ${trabajador.cargo || ""}
                     </td>
 
-                    <td class="${
-                        trabajador.activo
-                            ? "activo"
-                            : "inactivo"
-                    }">
-
+                    <td>
                         ${
                             trabajador.activo
                                 ? "Activo"
                                 : "Inactivo"
                         }
-
                     </td>
 
                     <td>
-
                         <button
                             type="button"
                             class="btn-editar"
@@ -225,12 +213,10 @@ async function cargarListaTrabajadores() {
                                 '${trabajador.area || ""}',
                                 '${trabajador.cargo || ""}',
                                 ${trabajador.activo}
-                            )">
-
+                            )"
+                        >
                             EDITAR
-
                         </button>
-
                     </td>
                 `;
 
@@ -242,7 +228,10 @@ async function cargarListaTrabajadores() {
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error cargando lista:",
+            error
+        );
 
         listaTrabajadores.innerHTML = `
             <tr>
@@ -255,9 +244,9 @@ async function cargarListaTrabajadores() {
 }
 
 
-// =====================================================
+// ==========================================
 // EDITAR TRABAJADOR
-// =====================================================
+// ==========================================
 
 function editarTrabajador(
     id,
@@ -271,8 +260,10 @@ function editarTrabajador(
 
     if (!formularioTrabajador) return;
 
+
     formularioTrabajador.dataset.id =
         id;
+
 
     const campoDni =
         document.getElementById("nuevoDni");
@@ -294,53 +285,38 @@ function editarTrabajador(
 
 
     if (campoDni) {
-
-        campoDni.value =
-            dni;
+        campoDni.value = dni;
     }
 
     if (campoNombre) {
-
-        campoNombre.value =
-            nombre;
+        campoNombre.value = nombre;
     }
 
     if (campoApellidos) {
-
-        campoApellidos.value =
-            apellidos;
+        campoApellidos.value = apellidos;
     }
 
     if (campoArea) {
-
-        campoArea.value =
-            area;
+        campoArea.value = area;
     }
 
     if (campoCargo) {
-
-        campoCargo.value =
-            cargo;
+        campoCargo.value = cargo;
     }
 
     if (campoActivo) {
-
         campoActivo.value =
-            activo
-                ? "true"
-                : "false";
+            activo ? "true" : "false";
     }
 
 
     if (tituloFormulario) {
-
         tituloFormulario.textContent =
             "Editar trabajador";
     }
 
 
     if (btnGuardarTrabajador) {
-
         btnGuardarTrabajador.textContent =
             "ACTUALIZAR TRABAJADOR";
     }
@@ -352,13 +328,11 @@ function editarTrabajador(
 }
 
 
-// =====================================================
-// GUARDAR / ACTUALIZAR TRABAJADOR
-// =====================================================
+// ==========================================
+// GUARDAR TRABAJADOR
+// ==========================================
 
 async function guardarTrabajador() {
-
-    // CAMPOS CORRECTOS DE TU HTML
 
     const campoDni =
         document.getElementById("nuevoDni");
@@ -378,8 +352,6 @@ async function guardarTrabajador() {
     const campoActivo =
         document.getElementById("nuevoActivo");
 
-
-    // OBTENER VALORES
 
     const dni =
         campoDni?.value.trim() || "";
@@ -415,7 +387,7 @@ async function guardarTrabajador() {
     );
 
 
-    // VALIDACIÓN
+    // VALIDAR CAMPOS OBLIGATORIOS
 
     if (
         !dni ||
@@ -434,9 +406,7 @@ async function guardarTrabajador() {
 
     // VALIDAR DNI
 
-    if (
-        !/^\d{8}$/.test(dni)
-    ) {
+    if (!/^\d{8}$/.test(dni)) {
 
         mostrarMensajeTrabajador(
             "El DNI debe tener exactamente 8 dígitos.",
@@ -456,9 +426,9 @@ async function guardarTrabajador() {
         let resultado;
 
 
-        // =================================
+        // ======================================
         // ACTUALIZAR
-        // =================================
+        // ======================================
 
         if (id) {
 
@@ -478,9 +448,9 @@ async function guardarTrabajador() {
 
         }
 
-        // =================================
+        // ======================================
         // CREAR
-        // =================================
+        // ======================================
 
         else {
 
@@ -496,7 +466,6 @@ async function guardarTrabajador() {
                         p_activo: activo
                     }
                 );
-
         }
 
 
@@ -506,9 +475,9 @@ async function guardarTrabajador() {
         );
 
 
-        // =================================
-        // MENSAJE DE ÉXITO
-        // =================================
+        // ======================================
+        // ÉXITO
+        // ======================================
 
         mostrarMensajeTrabajador(
             id
@@ -518,7 +487,7 @@ async function guardarTrabajador() {
         );
 
 
-        // LIMPIAR
+        // LIMPIAR SIN USAR .RESET()
 
         limpiarFormularioTrabajador();
 
@@ -546,20 +515,67 @@ async function guardarTrabajador() {
 }
 
 
-// =====================================================
+// ==========================================
 // LIMPIAR FORMULARIO
-// =====================================================
+// ==========================================
 
 function limpiarFormularioTrabajador() {
 
-    if (!formularioTrabajador) return;
+    const campoDni =
+        document.getElementById("nuevoDni");
+
+    const campoNombre =
+        document.getElementById("nuevoNombre");
+
+    const campoApellidos =
+        document.getElementById("nuevoApellidos");
+
+    const campoArea =
+        document.getElementById("nuevoArea");
+
+    const campoCargo =
+        document.getElementById("nuevoCargo");
+
+    const campoActivo =
+        document.getElementById("nuevoActivo");
 
 
-    formularioTrabajador.reset();
+    // LIMPIAR CADA CAMPO
+
+    if (campoDni) {
+        campoDni.value = "";
+    }
+
+    if (campoNombre) {
+        campoNombre.value = "";
+    }
+
+    if (campoApellidos) {
+        campoApellidos.value = "";
+    }
+
+    if (campoArea) {
+        campoArea.value = "";
+    }
+
+    if (campoCargo) {
+        campoCargo.value = "";
+    }
+
+    if (campoActivo) {
+        campoActivo.value = "true";
+    }
 
 
-    delete formularioTrabajador.dataset.id;
+    // QUITAR ID DE EDICIÓN
 
+    if (formularioTrabajador) {
+
+        delete formularioTrabajador.dataset.id;
+    }
+
+
+    // RESTAURAR TÍTULO
 
     if (tituloFormulario) {
 
@@ -567,6 +583,8 @@ function limpiarFormularioTrabajador() {
             "Nuevo trabajador";
     }
 
+
+    // RESTAURAR BOTÓN
 
     if (btnGuardarTrabajador) {
 
@@ -576,9 +594,9 @@ function limpiarFormularioTrabajador() {
 }
 
 
-// =====================================================
-// MOSTRAR MENSAJE
-// =====================================================
+// ==========================================
+// MENSAJE DE TRABAJADOR
+// ==========================================
 
 function mostrarMensajeTrabajador(
     texto,
@@ -609,9 +627,9 @@ function mostrarMensajeTrabajador(
 }
 
 
-// =====================================================
-// FECHA DE CADA DÍA
-// =====================================================
+// ==========================================
+// OBTENER FECHA POR DÍA
+// ==========================================
 
 function obtenerFechaPorDia(
     fechaBase,
@@ -636,9 +654,9 @@ function obtenerFechaPorDia(
 }
 
 
-// =====================================================
-// GUARDAR HORARIO SEMANAL
-// =====================================================
+// ==========================================
+// GUARDAR HORARIO
+// ==========================================
 
 async function guardarHorario() {
 
@@ -650,7 +668,6 @@ async function guardarHorario() {
 
     const trabajadorId =
         trabajadorSelect.value;
-
 
     const fechaBase =
         fechaInicio.value;
@@ -689,7 +706,6 @@ async function guardarHorario() {
     try {
 
         const dias = [
-
             "lunes",
             "martes",
             "miercoles",
@@ -697,7 +713,6 @@ async function guardarHorario() {
             "viernes",
             "sabado",
             "domingo"
-
         ];
 
 
@@ -715,12 +730,10 @@ async function guardarHorario() {
                         `${dia}Entrada`
                     );
 
-
                 const salida =
                     document.getElementById(
                         `${dia}Salida`
                     );
-
 
                 const descanso =
                     document.getElementById(
@@ -748,7 +761,6 @@ async function guardarHorario() {
                         descanso?.checked ||
                         false
                 };
-
             }
         );
 
@@ -790,7 +802,10 @@ async function guardarHorario() {
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error guardando horario:",
+            error
+        );
 
 
         if (mensaje) {
@@ -808,9 +823,9 @@ async function guardarHorario() {
 }
 
 
-// =====================================================
+// ==========================================
 // CARGAR HORARIO EXISTENTE
-// =====================================================
+// ==========================================
 
 async function cargarHorarioExistente() {
 
@@ -822,7 +837,6 @@ async function cargarHorarioExistente() {
 
     const trabajadorId =
         trabajadorSelect.value;
-
 
     const fechaBase =
         fechaInicio.value;
@@ -859,7 +873,6 @@ async function cargarHorarioExistente() {
 
 
         const dias = [
-
             "lunes",
             "martes",
             "miercoles",
@@ -867,7 +880,6 @@ async function cargarHorarioExistente() {
             "viernes",
             "sabado",
             "domingo"
-
         ];
 
 
@@ -886,12 +898,10 @@ async function cargarHorarioExistente() {
                         `${dia}Entrada`
                     );
 
-
                 const salida =
                     document.getElementById(
                         `${dia}Salida`
                     );
-
 
                 const descanso =
                     document.getElementById(
@@ -921,7 +931,6 @@ async function cargarHorarioExistente() {
                         horario.descanso ||
                         false;
                 }
-
             }
         );
 
@@ -929,21 +938,20 @@ async function cargarHorarioExistente() {
     } catch (error) {
 
         console.error(
-            "No se pudo cargar el horario:",
+            "Error cargando horario:",
             error
         );
     }
 }
 
 
-// =====================================================
+// ==========================================
 // LIMPIAR HORARIOS
-// =====================================================
+// ==========================================
 
 function limpiarHorarios() {
 
     const dias = [
-
         "lunes",
         "martes",
         "miercoles",
@@ -951,7 +959,6 @@ function limpiarHorarios() {
         "viernes",
         "sabado",
         "domingo"
-
     ];
 
 
@@ -963,12 +970,10 @@ function limpiarHorarios() {
                     `${dia}Entrada`
                 );
 
-
             const salida =
                 document.getElementById(
                     `${dia}Salida`
                 );
-
 
             const descanso =
                 document.getElementById(
@@ -977,31 +982,24 @@ function limpiarHorarios() {
 
 
             if (entrada) {
-
                 entrada.value = "";
             }
 
-
             if (salida) {
-
                 salida.value = "";
             }
 
-
             if (descanso) {
-
-                descanso.checked =
-                    false;
+                descanso.checked = false;
             }
-
         }
     );
 }
 
 
-// =====================================================
+// ==========================================
 // EVENTOS
-// =====================================================
+// ==========================================
 
 if (btnGuardarTrabajador) {
 
@@ -1049,9 +1047,9 @@ if (fechaInicio) {
 }
 
 
-// =====================================================
-// INICIO
-// =====================================================
+// ==========================================
+// INICIAR
+// ==========================================
 
 document.addEventListener(
     "DOMContentLoaded",
