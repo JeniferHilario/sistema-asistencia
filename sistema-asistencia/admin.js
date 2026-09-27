@@ -1,950 +1,661 @@
-// ======================================================
-// CONFIGURACIÓN SUPABASE
-// ======================================================
+// ===============================
+// PROTECCIÓN DE ACCESO
+// ===============================
 
-const SUPABASE_URL =
-    "https://aoyzlskorbbloxppwmhs.supabase.co";
-
-const SUPABASE_KEY =
-    "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
+if (sessionStorage.getItem("adminAutorizado") !== "true") {
+    window.location.href = "login.html";
+}
 
 
-// ======================================================
-// ELEMENTOS DE LA PÁGINA
-// ======================================================
+// ===============================
+// SUPABASE
+// ===============================
 
-const dniInput = document.getElementById("dni");
-const trabajadorInfo = document.getElementById("trabajadorInfo");
+const SUPABASE_URL = "https://aoyzlskorbbloxppwmhs.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0zwj4FTrsrvMaosuHpuGaQ_XNiZc8Df";
+
+
+// ===============================
+// ELEMENTOS
+// ===============================
+
+const formularioTrabajador = document.getElementById("formularioTrabajador");
+const btnGuardarTrabajador = document.getElementById("btnGuardarTrabajador");
+const listaTrabajadores = document.getElementById("listaTrabajadores");
+const mensajeTrabajador = document.getElementById("mensajeTrabajador");
+
+const trabajadorSelect = document.getElementById("trabajador");
+const fechaInicio = document.getElementById("fechaInicio");
+
 const mensaje = document.getElementById("mensaje");
-
-const btnEntrada = document.getElementById("btnEntrada");
-const btnSalida = document.getElementById("btnSalida");
-
-
-// ======================================================
-// TEMPORIZADOR
-// ======================================================
-
-let temporizadorLimpieza = null;
+const btnGuardar = document.getElementById("btnGuardar");
+const tituloFormulario = document.getElementById("tituloFormulario");
 
 
-// ======================================================
-// RELOJ
-// ======================================================
+// ===============================
+// FUNCIÓN GENERAL SUPABASE
+// ===============================
 
-function actualizarReloj() {
+async function llamarSupabase(nombreFuncion, parametros = {}) {
 
-    const ahora = new Date();
-
-    const horas =
-        String(ahora.getHours()).padStart(2, "0");
-
-    const minutos =
-        String(ahora.getMinutes()).padStart(2, "0");
-
-    const segundos =
-        String(ahora.getSeconds()).padStart(2, "0");
-
-    document.getElementById("reloj").textContent =
-        `${horas}:${minutos}:${segundos}`;
-
-    document.getElementById("fecha").textContent =
-        ahora.toLocaleDateString(
-            "es-PE",
-            {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            }
-        );
-}
-
-actualizarReloj();
-
-setInterval(actualizarReloj, 1000);
-
-
-// ======================================================
-// LIMPIAR PANTALLA
-// ======================================================
-
-function limpiarPantalla() {
-
-    console.log("Limpiando pantalla...");
-
-    dniInput.value = "";
-
-    trabajadorInfo.innerHTML = "";
-
-    mensaje.innerHTML = "";
-
-    btnEntrada.disabled = false;
-    btnSalida.disabled = false;
-
-}
-
-
-// ======================================================
-// PROGRAMAR LIMPIEZA — 6 SEGUNDOS
-// ======================================================
-
-function programarLimpieza() {
-
-    if (temporizadorLimpieza !== null) {
-
-        clearTimeout(temporizadorLimpieza);
-
-    }
-
-    console.log(
-        "La pantalla se limpiará en 6 segundos..."
+    const respuesta = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/${nombreFuncion}`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`
+            },
+            body: JSON.stringify(parametros)
+        }
     );
 
-    temporizadorLimpieza =
-        setTimeout(function () {
+    if (!respuesta.ok) {
+        const errorTexto = await respuesta.text();
+        console.error("Error Supabase:", errorTexto);
+        throw new Error(errorTexto);
+    }
 
-            limpiarPantalla();
-
-            temporizadorLimpieza = null;
-
-            console.log(
-                "Pantalla limpia."
-            );
-
-        }, 6000);
-
+    return await respuesta.json();
 }
 
 
-// ======================================================
-// TECLADO TÁCTIL
-// ======================================================
+// ===============================
+// CARGAR TRABAJADORES EN SELECT
+// ===============================
 
-document
-    .querySelectorAll(".numero")
-    .forEach(function (boton) {
+async function cargarTrabajadores() {
 
-        boton.addEventListener(
-            "click",
-            function () {
+    if (!trabajadorSelect) return;
 
-                const numero =
-                    boton.dataset.numero;
+    try {
 
-                if (dniInput.value.length < 8) {
-
-                    dniInput.value += numero;
-
-                    if (
-                        dniInput.value.length === 8
-                    ) {
-
-                        consultarTrabajador();
-
-                    }
-
-                }
-
-            }
+        const trabajadores = await llamarSupabase(
+            "listar_trabajadores"
         );
 
+        trabajadorSelect.innerHTML =
+            '<option value="">Seleccione trabajador</option>';
+
+        trabajadores.forEach(function (trabajador) {
+
+            const opcion = document.createElement("option");
+
+            opcion.value = trabajador.id;
+
+            opcion.textContent =
+                `${trabajador.dni} - ${trabajador.nombre} ${trabajador.apellidos}`;
+
+            trabajadorSelect.appendChild(opcion);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (mensaje) {
+            mensaje.textContent =
+                "No se pudieron cargar los trabajadores.";
+        }
+    }
+}
+
+
+// ===============================
+// CARGAR LISTA DE TRABAJADORES
+// ===============================
+
+async function cargarListaTrabajadores() {
+
+    if (!listaTrabajadores) return;
+
+    try {
+
+        const trabajadores = await llamarSupabase(
+            "listar_todos_trabajadores"
+        );
+
+        listaTrabajadores.innerHTML = "";
+
+        if (!trabajadores || trabajadores.length === 0) {
+
+            listaTrabajadores.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        No hay trabajadores registrados.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        trabajadores.forEach(function (trabajador) {
+
+            const fila = document.createElement("tr");
+
+            fila.innerHTML = `
+                <td>${trabajador.dni || ""}</td>
+                <td>${trabajador.nombre || ""}</td>
+                <td>${trabajador.apellidos || ""}</td>
+                <td>${trabajador.area || ""}</td>
+                <td>${trabajador.cargo || ""}</td>
+                <td>${trabajador.activo ? "Activo" : "Inactivo"}</td>
+
+                <td>
+                    <button
+                        type="button"
+                        onclick="editarTrabajador(
+                            '${trabajador.id}',
+                            '${trabajador.dni || ""}',
+                            '${trabajador.nombre || ""}',
+                            '${trabajador.apellidos || ""}',
+                            '${trabajador.area || ""}',
+                            '${trabajador.cargo || ""}',
+                            ${trabajador.activo}
+                        )">
+                        Editar
+                    </button>
+                </td>
+            `;
+
+            listaTrabajadores.appendChild(fila);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        listaTrabajadores.innerHTML = `
+            <tr>
+                <td colspan="7">
+                    Error al cargar trabajadores.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+// ===============================
+// EDITAR TRABAJADOR
+// ===============================
+
+function editarTrabajador(
+    id,
+    dni,
+    nombre,
+    apellidos,
+    area,
+    cargo,
+    activo
+) {
+
+    if (!formularioTrabajador) return;
+
+    formularioTrabajador.dataset.id = id;
+
+    const campoDni = document.getElementById("dniTrabajador");
+    const campoNombre = document.getElementById("nombreTrabajador");
+    const campoApellidos = document.getElementById("apellidosTrabajador");
+    const campoArea = document.getElementById("areaTrabajador");
+    const campoCargo = document.getElementById("cargoTrabajador");
+    const campoActivo = document.getElementById("activoTrabajador");
+
+    if (campoDni) campoDni.value = dni;
+    if (campoNombre) campoNombre.value = nombre;
+    if (campoApellidos) campoApellidos.value = apellidos;
+    if (campoArea) campoArea.value = area;
+    if (campoCargo) campoCargo.value = cargo;
+
+    if (campoActivo) {
+        campoActivo.checked = activo;
+    }
+
+    if (tituloFormulario) {
+        tituloFormulario.textContent =
+            "Editar trabajador";
+    }
+
+    if (btnGuardarTrabajador) {
+        btnGuardarTrabajador.textContent =
+            "Actualizar trabajador";
+    }
+
+    formularioTrabajador.style.display = "block";
+}
+
+
+// ===============================
+// GUARDAR / ACTUALIZAR TRABAJADOR
+// ===============================
+
+async function guardarTrabajador() {
+
+    const campoDni = document.getElementById("dniTrabajador");
+    const campoNombre = document.getElementById("nombreTrabajador");
+    const campoApellidos = document.getElementById("apellidosTrabajador");
+    const campoArea = document.getElementById("areaTrabajador");
+    const campoCargo = document.getElementById("cargoTrabajador");
+    const campoActivo = document.getElementById("activoTrabajador");
+
+    const dni = campoDni?.value.trim() || "";
+    const nombre = campoNombre?.value.trim() || "";
+    const apellidos = campoApellidos?.value.trim() || "";
+    const area = campoArea?.value.trim() || "";
+    const cargo = campoCargo?.value.trim() || "";
+    const activo = campoActivo ? campoActivo.checked : true;
+
+    if (!dni || !nombre || !apellidos) {
+
+        mostrarMensajeTrabajador(
+            "Complete DNI, nombre y apellidos.",
+            "red"
+        );
+
+        return;
+    }
+
+    try {
+
+        const id = formularioTrabajador?.dataset.id;
+
+        let resultado;
+
+        if (id) {
+
+            resultado = await llamarSupabase(
+                "actualizar_trabajador",
+                {
+                    p_id: id,
+                    p_dni: dni,
+                    p_nombre: nombre,
+                    p_apellidos: apellidos,
+                    p_area: area,
+                    p_cargo: cargo,
+                    p_activo: activo
+                }
+            );
+
+        } else {
+
+            resultado = await llamarSupabase(
+                "crear_trabajador",
+                {
+                    p_dni: dni,
+                    p_nombre: nombre,
+                    p_apellidos: apellidos,
+                    p_area: area,
+                    p_cargo: cargo,
+                    p_activo: activo
+                }
+            );
+        }
+
+        console.log("Resultado:", resultado);
+
+        mostrarMensajeTrabajador(
+            id
+                ? "Trabajador actualizado correctamente."
+                : "Trabajador registrado correctamente.",
+            "green"
+        );
+
+        limpiarFormularioTrabajador();
+
+        await cargarTrabajadores();
+        await cargarListaTrabajadores();
+
+    } catch (error) {
+
+        console.error(error);
+
+        mostrarMensajeTrabajador(
+            "No se pudo guardar el trabajador.",
+            "red"
+        );
+    }
+}
+
+
+// ===============================
+// LIMPIAR FORMULARIO
+// ===============================
+
+function limpiarFormularioTrabajador() {
+
+    if (!formularioTrabajador) return;
+
+    formularioTrabajador.reset();
+
+    delete formularioTrabajador.dataset.id;
+
+    if (tituloFormulario) {
+        tituloFormulario.textContent =
+            "Registrar trabajador";
+    }
+
+    if (btnGuardarTrabajador) {
+        btnGuardarTrabajador.textContent =
+            "Guardar trabajador";
+    }
+}
+
+
+// ===============================
+// MENSAJE TRABAJADOR
+// ===============================
+
+function mostrarMensajeTrabajador(texto, color) {
+
+    if (!mensajeTrabajador) return;
+
+    mensajeTrabajador.textContent = texto;
+    mensajeTrabajador.style.color = color;
+}
+
+
+// ===============================
+// FECHA DE CADA DÍA
+// ===============================
+
+function obtenerFechaPorDia(fechaBase, numeroDia) {
+
+    const fecha = new Date(fechaBase + "T00:00:00");
+
+    fecha.setDate(
+        fecha.getDate() + numeroDia
+    );
+
+    return fecha.toISOString().split("T")[0];
+}
+
+
+// ===============================
+// GUARDAR HORARIO SEMANAL
+// ===============================
+
+async function guardarHorario() {
+
+    if (!trabajadorSelect || !fechaInicio) return;
+
+    const trabajadorId = trabajadorSelect.value;
+    const fechaBase = fechaInicio.value;
+
+    if (!trabajadorId) {
+
+        if (mensaje) {
+            mensaje.textContent =
+                "Seleccione un trabajador.";
+        }
+
+        return;
+    }
+
+    if (!fechaBase) {
+
+        if (mensaje) {
+            mensaje.textContent =
+                "Seleccione la fecha de inicio.";
+        }
+
+        return;
+    }
+
+    try {
+
+        const dias = [
+            "lunes",
+            "martes",
+            "miercoles",
+            "jueves",
+            "viernes",
+            "sabado",
+            "domingo"
+        ];
+
+        const horarios = {};
+
+        dias.forEach(function (dia, indice) {
+
+            const entrada =
+                document.getElementById(`${dia}Entrada`);
+
+            const salida =
+                document.getElementById(`${dia}Salida`);
+
+            const descanso =
+                document.getElementById(`${dia}Descanso`);
+
+            horarios[dia] = {
+                fecha: obtenerFechaPorDia(
+                    fechaBase,
+                    indice
+                ),
+                hora_entrada:
+                    entrada?.value || null,
+                hora_salida:
+                    salida?.value || null,
+                descanso:
+                    descanso?.checked || false
+            };
+        });
+
+        const resultado =
+            await llamarSupabase(
+                "guardar_horario_semanal",
+                {
+                    p_trabajador_id: trabajadorId,
+                    p_fecha_inicio: fechaBase,
+                    p_horarios: horarios
+                }
+            );
+
+        console.log(resultado);
+
+        if (mensaje) {
+
+            mensaje.textContent =
+                "Horario semanal guardado correctamente.";
+
+            mensaje.style.color = "green";
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (mensaje) {
+
+            mensaje.textContent =
+                "No se pudo guardar el horario.";
+
+            mensaje.style.color = "red";
+        }
+    }
+}
+
+
+// ===============================
+// CARGAR HORARIO EXISTENTE
+// ===============================
+
+async function cargarHorarioExistente() {
+
+    if (!trabajadorSelect || !fechaInicio) return;
+
+    const trabajadorId =
+        trabajadorSelect.value;
+
+    const fechaBase =
+        fechaInicio.value;
+
+    if (!trabajadorId || !fechaBase) return;
+
+    try {
+
+        const resultado =
+            await llamarSupabase(
+                "obtener_horario_semanal",
+                {
+                    p_trabajador_id: trabajadorId,
+                    p_fecha_inicio: fechaBase
+                }
+            );
+
+        console.log(
+            "Horario existente:",
+            resultado
+        );
+
+        if (!resultado) return;
+
+        const dias = [
+            "lunes",
+            "martes",
+            "miercoles",
+            "jueves",
+            "viernes",
+            "sabado",
+            "domingo"
+        ];
+
+        dias.forEach(function (dia) {
+
+            const horario =
+                resultado[dia];
+
+            if (!horario) return;
+
+            const entrada =
+                document.getElementById(`${dia}Entrada`);
+
+            const salida =
+                document.getElementById(`${dia}Salida`);
+
+            const descanso =
+                document.getElementById(`${dia}Descanso`);
+
+            if (entrada) {
+                entrada.value =
+                    horario.hora_entrada || "";
+            }
+
+            if (salida) {
+                salida.value =
+                    horario.hora_salida || "";
+            }
+
+            if (descanso) {
+                descanso.checked =
+                    horario.descanso || false;
+            }
+        });
+
+    } catch (error) {
+
+        console.error(
+            "No se pudo cargar el horario:",
+            error
+        );
+    }
+}
+
+
+// ===============================
+// LIMPIAR HORARIOS
+// ===============================
+
+function limpiarHorarios() {
+
+    const dias = [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes",
+        "sabado",
+        "domingo"
+    ];
+
+    dias.forEach(function (dia) {
+
+        const entrada =
+            document.getElementById(`${dia}Entrada`);
+
+        const salida =
+            document.getElementById(`${dia}Salida`);
+
+        const descanso =
+            document.getElementById(`${dia}Descanso`);
+
+        if (entrada) entrada.value = "";
+
+        if (salida) salida.value = "";
+
+        if (descanso) descanso.checked = false;
     });
+}
 
 
-// ======================================================
-// BOTÓN BORRAR
-// ======================================================
+// ===============================
+// EVENTOS
+// ===============================
 
-document
-    .getElementById("btnBorrar")
-    .addEventListener(
+if (btnGuardarTrabajador) {
+
+    btnGuardarTrabajador.addEventListener(
         "click",
+        guardarTrabajador
+    );
+}
+
+if (btnGuardar) {
+
+    btnGuardar.addEventListener(
+        "click",
+        guardarHorario
+    );
+}
+
+if (trabajadorSelect) {
+
+    trabajadorSelect.addEventListener(
+        "change",
         function () {
 
-            dniInput.value =
-                dniInput.value.slice(0, -1);
+            limpiarHorarios();
 
-            trabajadorInfo.innerHTML = "";
-
-            mensaje.innerHTML = "";
-
+            cargarHorarioExistente();
         }
     );
+}
 
+if (fechaInicio) {
 
-// ======================================================
-// BOTÓN LIMPIAR
-// ======================================================
-
-document
-    .getElementById("btnLimpiar")
-    .addEventListener(
-        "click",
+    fechaInicio.addEventListener(
+        "change",
         function () {
 
-            if (
-                temporizadorLimpieza !== null
-            ) {
+            limpiarHorarios();
 
-                clearTimeout(
-                    temporizadorLimpieza
-                );
-
-                temporizadorLimpieza = null;
-
-            }
-
-            limpiarPantalla();
-
+            cargarHorarioExistente();
         }
     );
-
-
-// ======================================================
-// CONSULTAR TRABAJADOR
-// ======================================================
-
-async function consultarTrabajador() {
-
-    const dni =
-        dniInput.value.trim();
-
-    trabajadorInfo.innerHTML =
-        "⏳ Buscando trabajador...";
-
-    try {
-
-        const respuesta =
-            await fetch(
-                `${SUPABASE_URL}/rest/v1/rpc/consultar_trabajador`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            `Bearer ${SUPABASE_KEY}`
-                    },
-
-                    body: JSON.stringify({
-                        p_dni: dni
-                    })
-                }
-            );
-
-        const resultado =
-            await respuesta.json();
-
-        console.log(
-            "Consulta:",
-            resultado
-        );
-
-
-        // ==================================================
-        // ERROR
-        // ==================================================
-
-        if (!respuesta.ok) {
-
-            trabajadorInfo.innerHTML =
-                "❌ Error al consultar trabajador.";
-
-            programarLimpieza();
-
-            return;
-
-        }
-
-
-        // ==================================================
-        // DNI NO ENCONTRADO
-        // ==================================================
-
-        if (!resultado.ok) {
-
-            trabajadorInfo.innerHTML =
-                `⚠️ ${resultado.mensaje}`;
-
-            programarLimpieza();
-
-            return;
-
-        }
-
-
-        // ==================================================
-        // TRABAJADOR CON HORARIO
-        // ==================================================
-
-        if (resultado.tiene_horario) {
-
-            trabajadorInfo.innerHTML = `
-
-                <div class="nombre-trabajador">
-
-                    👤 ${resultado.nombre}
-                    ${resultado.apellidos}
-
-                </div>
-
-                <div class="datos-trabajador">
-
-                    <p>
-                        <strong>Área:</strong>
-                        ${resultado.area}
-                    </p>
-
-                    <p>
-                        <strong>Cargo:</strong>
-                        ${resultado.cargo}
-                    </p>
-
-                    <p>
-                        <strong>Horario:</strong>
-                        ${resultado.hora_entrada.substring(0,5)}
-                        -
-                        ${resultado.hora_salida.substring(0,5)}
-                    </p>
-
-                </div>
-
-            `;
-
-        }
-
-
-        // ==================================================
-        // SIN HORARIO
-        // ==================================================
-
-        else {
-
-            trabajadorInfo.innerHTML = `
-
-                <div class="nombre-trabajador">
-
-                    👤 ${resultado.nombre}
-                    ${resultado.apellidos}
-
-                </div>
-
-                <div class="datos-trabajador">
-
-                    <p>
-                        <strong>Área:</strong>
-                        ${resultado.area}
-                    </p>
-
-                    <p>
-                        <strong>Cargo:</strong>
-                        ${resultado.cargo}
-                    </p>
-
-                    <p class="sin-horario">
-
-                        ⚠️ ${resultado.mensaje}
-
-                    </p>
-
-                </div>
-
-            `;
-
-            programarLimpieza();
-
-        }
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        trabajadorInfo.innerHTML =
-            "❌ No se pudo conectar con el sistema.";
-
-        programarLimpieza();
-
-    }
-
 }
 
 
-// ======================================================
-// OBTENER UBICACIÓN
-// ======================================================
-
-function obtenerUbicacion() {
-
-    return new Promise(
-        function (resolve, reject) {
-
-            if (
-                !navigator.geolocation
-            ) {
-
-                reject(
-                    new Error(
-                        "Ubicación no disponible."
-                    )
-                );
-
-                return;
-
-            }
-
-            navigator.geolocation.getCurrentPosition(
-
-                function (posicion) {
-
-                    resolve({
-
-                        latitud:
-                            posicion.coords.latitude,
-
-                        longitud:
-                            posicion.coords.longitude,
-
-                        precision:
-                            posicion.coords.accuracy
-
-                    });
-
-                },
-
-                function (error) {
-
-                    console.error(
-                        "Error ubicación:",
-                        error
-                    );
-
-                    reject(error);
-
-                },
-
-                {
-                    enableHighAccuracy: true,
-
-                    timeout: 10000,
-
-                    maximumAge: 0
-                }
-
-            );
-
-        }
-    );
-
-}
-
-
-// ======================================================
-// FORMATEAR HORA
-// ======================================================
-
-function formatearHora(hora) {
-
-    if (!hora) {
-
-        return "--:--";
-
-    }
-
-    const partes =
-        hora.substring(0, 5).split(":");
-
-    let horas =
-        parseInt(partes[0]);
-
-    const minutos =
-        partes[1];
-
-    const periodo =
-        horas >= 12
-            ? "PM"
-            : "AM";
-
-    horas =
-        horas % 12 || 12;
-
-    return `${horas}:${minutos} ${periodo}`;
-
-}
-
-
-// ======================================================
-// REGISTRAR MARCACIÓN
-// ======================================================
-
-async function registrarMarcacion(tipo) {
-
-    const dni =
-        dniInput.value.trim();
-
-
-    // ==================================================
-    // VALIDAR DNI
-    // ==================================================
-
-    if (dni === "") {
-
-        mensaje.innerHTML = `
-            <div class="mensaje-grande">
-                ⚠️ INGRESE SU DNI
-            </div>
-        `;
-
-        programarLimpieza();
-
-        return;
-
-    }
-
-
-    // ==================================================
-    // VALIDAR 8 DÍGITOS
-    // ==================================================
-
-    if (!/^\d{8}$/.test(dni)) {
-
-        mensaje.innerHTML = `
-            <div class="mensaje-grande">
-                ⚠️ COMPLETE LOS 8 DÍGITOS
-            </div>
-        `;
-
-        programarLimpieza();
-
-        return;
-
-    }
-
-
-    // ==================================================
-    // DESACTIVAR BOTONES
-    // ==================================================
-
-    btnEntrada.disabled = true;
-
-    btnSalida.disabled = true;
-
-
-    mensaje.innerHTML = `
-        <div class="mensaje-grande">
-            📍 OBTENIENDO UBICACIÓN...
-        </div>
-    `;
-
-
-    try {
-
-        // ==================================================
-        // OBTENER UBICACIÓN
-        // ==================================================
-
-        const ubicacion =
-            await obtenerUbicacion();
-
-
-        console.log(
-            "Ubicación:",
-            ubicacion
-        );
-
-
-        mensaje.innerHTML = `
-            <div class="mensaje-grande">
-                ⏳ REGISTRANDO...
-            </div>
-        `;
-
-
-        // ==================================================
-        // ENVIAR A SUPABASE
-        // ==================================================
-
-        const respuesta =
-            await fetch(
-                `${SUPABASE_URL}/rest/v1/rpc/registrar_marcacion_con_ubicacion`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            `Bearer ${SUPABASE_KEY}`
-                    },
-
-                    body: JSON.stringify({
-
-                        p_dni:
-                            dni,
-
-                        p_tipo:
-                            tipo,
-
-                        p_latitud:
-                            ubicacion.latitud,
-
-                        p_longitud:
-                            ubicacion.longitud,
-
-                        p_precision:
-                            ubicacion.precision
-
-                    })
-                }
-            );
-
-
-        const resultado =
-            await respuesta.json();
-
-
-        console.log(
-            "Resultado:",
-            resultado
-        );
-
-
-        // ==================================================
-        // ERROR
-        // ==================================================
-
-        if (!respuesta.ok) {
-
-            console.error(
-                "Error:",
-                resultado
-            );
-
-            mensaje.innerHTML = `
-                <div class="mensaje-grande">
-                    ❌ ERROR AL REGISTRAR
-                </div>
-            `;
-
-            btnEntrada.disabled = false;
-            btnSalida.disabled = false;
-
-            programarLimpieza();
-
-            return;
-
-        }
-
-
-        // ==================================================
-        // MARCACIÓN CORRECTA
-        // ==================================================
-
-        if (resultado.ok) {
-
-
-            // ==============================================
-            // ENTRADA
-            // ==============================================
-
-            if (tipo === "ENTRADA") {
-
-                const hora =
-                    formatearHora(
-                        resultado.hora_entrada
-                    );
-
-                const tardanza =
-                    Number(
-                        resultado.minutos_tardanza || 0
-                    );
-
-
-                if (tardanza > 0) {
-
-                    mensaje.innerHTML = `
-
-                        <div class="mensaje-grande mensaje-tarde">
-
-                            🔴
-
-                            <div>
-                                ENTRADA REGISTRADA
-                            </div>
-
-                            <div class="hora-marcacion">
-                                ${hora}
-                            </div>
-
-                            <div>
-                                LLEGÓ TARDE
-                            </div>
-
-                            <div class="minutos-tarde">
-                                ${tardanza} MINUTO${tardanza === 1 ? "" : "S"}
-                            </div>
-
-                        </div>
-
-                    `;
-
-                }
-
-                else {
-
-                    mensaje.innerHTML = `
-
-                        <div class="mensaje-grande mensaje-tiempo">
-
-                            🟢
-
-                            <div>
-                                ENTRADA REGISTRADA
-                            </div>
-
-                            <div class="hora-marcacion">
-                                ${hora}
-                            </div>
-
-                            <div>
-                                A TIEMPO
-                            </div>
-
-                        </div>
-
-                    `;
-
-                }
-
-            }
-
-
-            // ==============================================
-            // SALIDA
-            // ==============================================
-
-            else {
-
-                const hora =
-                    formatearHora(
-                        resultado.hora_salida
-                    );
-
-                const horasTrabajadas =
-                    resultado.horas_trabajadas || 0;
-
-                const horasExtras =
-                    Number(
-                        resultado.horas_extras || 0
-                    );
-
-
-                mensaje.innerHTML = `
-
-                    <div class="mensaje-grande mensaje-salida">
-
-                        🔵
-
-                        <div>
-                            SALIDA REGISTRADA
-                        </div>
-
-                        <div class="hora-marcacion">
-                            ${hora}
-                        </div>
-
-                        <div class="detalle-horas">
-
-                            HORAS TRABAJADAS:
-                            ${horasTrabajadas}
-
-                        </div>
-
-                        <div class="detalle-extras">
-
-                            ⭐ HORAS EXTRAS:
-                            ${horasExtras}
-
-                        </div>
-
-                    </div>
-
-                `;
-
-            }
-
-
-            // Limpiar después de 6 segundos
-            programarLimpieza();
-
-        }
-
-
-        // ==================================================
-        // MARCACIÓN NO PERMITIDA
-        // ==================================================
-
-        else {
-
-            mensaje.innerHTML = `
-
-                <div class="mensaje-grande">
-
-                    ⚠️
-
-                    <div>
-                        ${resultado.mensaje}
-                    </div>
-
-                </div>
-
-            `;
-
-            btnEntrada.disabled = false;
-            btnSalida.disabled = false;
-
-            programarLimpieza();
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ERROR
-    // ==================================================
-
-    catch (error) {
-
-        console.error(error);
-
-
-        if (error.code === 1) {
-
-            mensaje.innerHTML = `
-
-                <div class="mensaje-grande">
-
-                    📍
-
-                    <div>
-                        DEBE PERMITIR LA UBICACIÓN
-                    </div>
-
-                    <div class="texto-pequeno">
-                        Active el permiso de ubicación
-                        para poder marcar.
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-        else if (error.code === 2) {
-
-            mensaje.innerHTML = `
-
-                <div class="mensaje-grande">
-
-                    📍
-
-                    <div>
-                        NO SE PUDO OBTENER LA UBICACIÓN
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-        else if (error.code === 3) {
-
-            mensaje.innerHTML = `
-
-                <div class="mensaje-grande">
-
-                    📍
-
-                    <div>
-                        LA UBICACIÓN TARDÓ DEMASIADO
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-        else {
-
-            mensaje.innerHTML = `
-
-                <div class="mensaje-grande">
-
-                    ❌
-
-                    <div>
-                        NO SE PUDO REGISTRAR
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-
-        btnEntrada.disabled = false;
-        btnSalida.disabled = false;
-
-        programarLimpieza();
-
-    }
-
-}
-
-
-// ======================================================
-// BOTÓN ENTRADA
-// ======================================================
-
-btnEntrada.addEventListener(
-    "click",
+// ===============================
+// INICIO
+// ===============================
+
+document.addEventListener(
+    "DOMContentLoaded",
     function () {
 
-        registrarMarcacion(
-            "ENTRADA"
-        );
+        cargarTrabajadores();
 
-    }
-);
-
-
-// ======================================================
-// BOTÓN SALIDA
-// ======================================================
-
-btnSalida.addEventListener(
-    "click",
-    function () {
-
-        registrarMarcacion(
-            "SALIDA"
-        );
-
+        cargarListaTrabajadores();
     }
 );
