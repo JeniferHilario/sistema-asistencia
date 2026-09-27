@@ -320,6 +320,34 @@
         }
 
 
+        /* BOTONES GPS */
+
+        .btn-ubicacion {
+            display: inline-block;
+            background: #b00000;
+            color: white;
+            padding: 7px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .btn-ubicacion:hover {
+            background: #8e0000;
+        }
+
+        .tardanza {
+            color: #b00000;
+            font-weight: bold;
+        }
+
+        .extra {
+            color: #198754;
+            font-weight: bold;
+        }
+
+
         /* ========================= */
         /* CELULAR */
         /* ========================= */
@@ -974,7 +1002,10 @@
                         <th>Salida</th>
                         <th>Tardanza</th>
                         <th>Horas trabajadas</th>
+                        <th>Horas extras</th>
                         <th>Estado</th>
+                        <th>Ubicación entrada</th>
+                        <th>Ubicación salida</th>
 
                     </tr>
 
@@ -986,7 +1017,7 @@
                     <tr>
 
                         <td
-                            colspan="10"
+                            colspan="13"
                             class="sin-datos">
 
                             Seleccione las fechas y presione
@@ -1146,7 +1177,7 @@ async function consultarReporte() {
         <tr>
 
             <td
-                colspan="10"
+                colspan="13"
                 class="sin-datos">
 
                 Consultando información...
@@ -1242,6 +1273,16 @@ async function consultarReporte() {
         );
 
 
+        mensaje.textContent =
+            "Reporte actualizado correctamente.";
+
+        mensaje.style.background =
+            "#d4edda";
+
+        mensaje.style.color =
+            "#155724";
+
+
     } catch (error) {
 
         console.error(
@@ -1255,7 +1296,7 @@ async function consultarReporte() {
             <tr>
 
                 <td
-                    colspan="10"
+                    colspan="13"
                     class="sin-datos">
 
                     No se pudo cargar el reporte.
@@ -1334,7 +1375,7 @@ function mostrarReporte(datos) {
             <tr>
 
                 <td
-                    colspan="10"
+                    colspan="13"
                     class="sin-datos">
 
                     No existen registros para
@@ -1365,6 +1406,140 @@ function mostrarReporte(datos) {
         const fila =
             document.createElement("tr");
 
+
+        /* ============================== */
+        /* UBICACIÓN ENTRADA */
+        /* ============================== */
+
+        let ubicacionEntrada = "-";
+
+
+        if (
+            registro.latitud_entrada !== null &&
+            registro.latitud_entrada !== undefined &&
+            registro.longitud_entrada !== null &&
+            registro.longitud_entrada !== undefined
+        ) {
+
+            ubicacionEntrada = `
+
+                <a
+                    class="btn-ubicacion"
+                    href="https://www.google.com/maps?q=${registro.latitud_entrada},${registro.longitud_entrada}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+
+                    📍 Ver ubicación
+
+                </a>
+
+            `;
+
+        }
+
+
+        /* ============================== */
+        /* UBICACIÓN SALIDA */
+        /* ============================== */
+
+        let ubicacionSalida = "-";
+
+
+        if (
+            registro.latitud_salida !== null &&
+            registro.latitud_salida !== undefined &&
+            registro.longitud_salida !== null &&
+            registro.longitud_salida !== undefined
+        ) {
+
+            ubicacionSalida = `
+
+                <a
+                    class="btn-ubicacion"
+                    href="https://www.google.com/maps?q=${registro.latitud_salida},${registro.longitud_salida}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+
+                    📍 Ver ubicación
+
+                </a>
+
+            `;
+
+        }
+
+
+        /* ============================== */
+        /* TARDANZA */
+        /* ============================== */
+
+        const minutosTardanza =
+            Number(
+                registro.minutos_tardanza || 0
+            );
+
+
+        let tardanzaHTML = "0 min";
+
+
+        if (minutosTardanza > 0) {
+
+            tardanzaHTML = `
+
+                <span class="tardanza">
+
+                    🔴 ${minutosTardanza} min
+
+                </span>
+
+            `;
+
+        }
+
+
+        /* ============================== */
+        /* HORAS EXTRAS */
+        /* ============================== */
+
+        const horasExtras =
+            Number(
+                registro.horas_extras || 0
+            );
+
+
+        const minutosExtras =
+            Number(
+                registro.minutos_extras || 0
+            );
+
+
+        let horasExtrasHTML = "0 h";
+
+
+        if (horasExtras > 0) {
+
+            horasExtrasHTML = `
+
+                <span class="extra">
+
+                    ⭐ ${horasExtras} h
+
+                </span>
+
+                <br>
+
+                <small>
+                    (${minutosExtras} min)
+                </small>
+
+            `;
+
+        }
+
+
+        /* ============================== */
+        /* FILA */
+        /* ============================== */
 
         fila.innerHTML = `
 
@@ -1397,15 +1572,32 @@ function mostrarReporte(datos) {
             </td>
 
             <td>
-                ${registro.minutos_tardanza ?? 0} min
+                ${tardanzaHTML}
             </td>
 
             <td>
-                ${registro.horas_trabajadas ?? "-"}
+                ${
+                    registro.horas_trabajadas !== null &&
+                    registro.horas_trabajadas !== undefined
+                        ? registro.horas_trabajadas + " h"
+                        : "-"
+                }
+            </td>
+
+            <td>
+                ${horasExtrasHTML}
             </td>
 
             <td>
                 ${registro.estado || "-"}
+            </td>
+
+            <td>
+                ${ubicacionEntrada}
+            </td>
+
+            <td>
+                ${ubicacionSalida}
             </td>
 
         `;
@@ -1442,39 +1634,104 @@ function descargarExcel() {
 
     const datosExcel =
         datosReporte.map(
-            registro => ({
+            registro => {
 
-                "Fecha":
-                    registro.fecha || "",
+                let ubicacionEntrada = "";
 
-                "DNI":
-                    registro.dni || "",
+                let ubicacionSalida = "";
 
-                "Trabajador":
-                    registro.trabajador || "",
 
-                "Área":
-                    registro.area || "",
+                if (
+                    registro.latitud_entrada !== null &&
+                    registro.latitud_entrada !== undefined &&
+                    registro.longitud_entrada !== null &&
+                    registro.longitud_entrada !== undefined
+                ) {
 
-                "Cargo":
-                    registro.cargo || "",
+                    ubicacionEntrada =
+                        `https://www.google.com/maps?q=${registro.latitud_entrada},${registro.longitud_entrada}`;
 
-                "Entrada":
-                    registro.hora_entrada || "",
+                }
 
-                "Salida":
-                    registro.hora_salida || "",
 
-                "Tardanza (minutos)":
-                    registro.minutos_tardanza ?? 0,
+                if (
+                    registro.latitud_salida !== null &&
+                    registro.latitud_salida !== undefined &&
+                    registro.longitud_salida !== null &&
+                    registro.longitud_salida !== undefined
+                ) {
 
-                "Horas trabajadas":
-                    registro.horas_trabajadas ?? "",
+                    ubicacionSalida =
+                        `https://www.google.com/maps?q=${registro.latitud_salida},${registro.longitud_salida}`;
 
-                "Estado":
-                    registro.estado || ""
+                }
 
-            })
+
+                return {
+
+                    "Fecha":
+                        registro.fecha || "",
+
+                    "DNI":
+                        registro.dni || "",
+
+                    "Trabajador":
+                        registro.trabajador || "",
+
+                    "Área":
+                        registro.area || "",
+
+                    "Cargo":
+                        registro.cargo || "",
+
+                    "Entrada":
+                        registro.hora_entrada || "",
+
+                    "Salida":
+                        registro.hora_salida || "",
+
+                    "Tardanza (minutos)":
+                        registro.minutos_tardanza ?? 0,
+
+                    "Horas trabajadas":
+                        registro.horas_trabajadas ?? "",
+
+                    "Horas extras":
+                        registro.horas_extras ?? 0,
+
+                    "Minutos extras":
+                        registro.minutos_extras ?? 0,
+
+                    "Estado":
+                        registro.estado || "",
+
+                    "Latitud entrada":
+                        registro.latitud_entrada ?? "",
+
+                    "Longitud entrada":
+                        registro.longitud_entrada ?? "",
+
+                    "Precisión entrada (m)":
+                        registro.precision_entrada ?? "",
+
+                    "Latitud salida":
+                        registro.latitud_salida ?? "",
+
+                    "Longitud salida":
+                        registro.longitud_salida ?? "",
+
+                    "Precisión salida (m)":
+                        registro.precision_salida ?? "",
+
+                    "Ubicación entrada":
+                        ubicacionEntrada,
+
+                    "Ubicación salida":
+                        ubicacionSalida
+
+                };
+
+            }
         );
 
 
@@ -1495,7 +1752,16 @@ function descargarExcel() {
         { wch: 12 },
         { wch: 20 },
         { wch: 20 },
-        { wch: 18 }
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 20 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 25 },
+        { wch: 25 }
 
     ];
 
@@ -1585,7 +1851,7 @@ colocarFechasReporte();
 </script>
 
 
-<!-- TU JAVASCRIPT ACTUAL -->
+<!-- JAVASCRIPT PRINCIPAL -->
 <script src="admin.js"></script>
 
 
