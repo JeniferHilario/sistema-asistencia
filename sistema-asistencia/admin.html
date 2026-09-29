@@ -751,28 +751,37 @@
 
         <div id="mensaje"></div>
 
-        <!-- ========================================= -->
-        <!-- CARGAR HORARIO DESDE EXCEL -->
-        <!-- ========================================= -->
-        <div class="carga-excel">
-            <h3>📥 Cargar horario semanal desde Excel</h3>
-            <p>
-                Puedes seguir ingresando el horario manualmente como hasta ahora,
-                o cargar un archivo Excel con los horarios de varios trabajadores.
-            </p>
-            <input type="file" id="archivoHorarioExcel" accept=".xlsx,.xls,.csv">
-            <div class="acciones">
-                <button type="button" class="btn-excel" id="btnCargarExcel">
-                    📥 SUBIR Y GUARDAR EXCEL
-                </button>
-            </div>
-            <div id="resultadoExcelHorario" class="resultado-excel"></div>
-        </div>
+        <!-- ======================================================
+             CARGAR HORARIO DESDE EXCEL
+            ====================================================== -->
 
-    </section>
+         <div class="cargar-excel">
 
+             <h3>📥 Cargar horario semanal desde Excel</h3>
 
+          <p>
+             Puedes seguir ingresando el horario manualmente como hasta ahora,
+             o cargar un archivo Excel con los horarios de varios trabajadores.
+         </p>
 
+           <input
+              type="file"
+              id="archivoExcel"
+              accept=".xlsx,.xls"
+           >
+
+         <button
+             type="button"
+             id="btnSubirExcel">
+            📥 SUBIR Y GUARDAR EXCEL
+        </button>
+
+       <div
+          id="mensajeExcel">
+       </div>
+
+</div>
+        
     <!-- ========================================= -->
     <!-- REPORTES -->
     <!-- ========================================= -->
