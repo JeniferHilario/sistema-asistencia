@@ -151,21 +151,32 @@ function mostrarMensajeTrabajador(texto, tipo = "red") {
     }
 }
 
-
 // ======================================================
-// CARGAR TRABAJADORES EN SELECT
+// CARGAR TRABAJADORES EN SELECT DE HORARIOS
 // ======================================================
 
 async function cargarTrabajadores() {
 
-    if (!trabajadorSelect) return;
+    if (!trabajadorSelect) {
+        return;
+    }
+
 
     try {
 
+        console.log(
+            "Cargando trabajadores para horarios..."
+        );
+
+
+        // Usamos la misma función que ya sabemos
+        // que devuelve correctamente los trabajadores.
+
         const trabajadores =
             await llamarSupabase(
-                "listar_trabajadores"
+                "listar_todos_trabajadores"
             );
+
 
         trabajadorSelect.innerHTML = `
             <option value="">
@@ -173,23 +184,54 @@ async function cargarTrabajadores() {
             </option>
         `;
 
-        if (!Array.isArray(trabajadores)) {
+
+        if (
+            !Array.isArray(trabajadores) ||
+            trabajadores.length === 0
+        ) {
+
+            console.warn(
+                "No se encontraron trabajadores."
+            );
+
             return;
         }
 
-        trabajadores.forEach(function(trabajador) {
 
-            const opcion =
-                document.createElement("option");
+        trabajadores.forEach(
+            function(trabajador) {
 
-            opcion.value =
-                trabajador.id;
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
 
-            opcion.textContent =
-                `${trabajador.dni} - ${trabajador.nombre} ${trabajador.apellidos}`;
 
-            trabajadorSelect.appendChild(opcion);
-        });
+                opcion.value =
+                    trabajador.id;
+
+
+                opcion.textContent =
+                    `${trabajador.dni} - ${
+                        trabajador.nombre || ""
+                    } ${
+                        trabajador.apellidos || ""
+                    }`;
+
+
+                trabajadorSelect.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        console.log(
+            "TRABAJADORES CARGADOS EN HORARIOS:",
+            trabajadores.length
+        );
+
 
     } catch (error) {
 
@@ -205,7 +247,6 @@ async function cargarTrabajadores() {
         `;
     }
 }
-
 
 // ======================================================
 // CARGAR TABLA DE TRABAJADORES
