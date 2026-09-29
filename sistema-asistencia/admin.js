@@ -2845,6 +2845,172 @@ function leerArchivoExcel(archivo) {
                                     cellDates: true
                                 }
                             );
+                        // ======================================================
+// PROBAR LECTURA DEL EXCEL
+// ======================================================
+
+async function subirYGuardarExcel() {
+
+    console.log("=================================");
+    console.log("BOTÓN EXCEL PRESIONADO");
+    console.log("=================================");
+
+
+    const archivoInput =
+        document.getElementById("archivoExcel");
+
+    const mensajeExcel =
+        document.getElementById("mensajeExcel");
+
+
+    // ------------------------------------------
+    // VERIFICAR ARCHIVO
+    // ------------------------------------------
+
+    if (!archivoInput) {
+
+        console.error(
+            "No existe el elemento #archivoExcel"
+        );
+
+        return;
+    }
+
+
+    if (
+        !archivoInput.files ||
+        archivoInput.files.length === 0
+    ) {
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                "Seleccione primero un archivo Excel.";
+
+            mensajeExcel.style.color =
+                "#721c24";
+
+            mensajeExcel.style.background =
+                "#f8d7da";
+        }
+
+        return;
+    }
+
+
+    const archivo =
+        archivoInput.files[0];
+
+
+    console.log(
+        "Archivo seleccionado:",
+        archivo.name
+    );
+
+
+    try {
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                "Leyendo archivo Excel...";
+
+            mensajeExcel.style.color =
+                "#155724";
+
+            mensajeExcel.style.background =
+                "#d4edda";
+        }
+
+
+        // ------------------------------------------
+        // LEER EXCEL
+        // ------------------------------------------
+
+        const filas =
+            await leerArchivoExcel(
+                archivo
+            );
+
+
+        console.log(
+            "================================="
+        );
+
+        console.log(
+            "FILAS LEÍDAS DEL EXCEL:"
+        );
+
+        console.log(
+            filas
+        );
+
+        console.log(
+            "Cantidad de filas:",
+            filas.length
+        );
+
+        console.log(
+            "================================="
+        );
+
+
+        // ------------------------------------------
+        // VERIFICAR RESULTADO
+        // ------------------------------------------
+
+        if (
+            !Array.isArray(filas) ||
+            filas.length === 0
+        ) {
+
+            throw new Error(
+                "El Excel no contiene registros."
+            );
+        }
+
+
+        // ------------------------------------------
+        // MOSTRAR RESULTADO
+        // ------------------------------------------
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                `✓ Excel leído correctamente. Se encontraron ${filas.length} registros.`;
+
+            mensajeExcel.style.color =
+                "#155724";
+
+            mensajeExcel.style.background =
+                "#d4edda";
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "ERROR LEYENDO EXCEL:",
+            error
+        );
+
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                error.message ||
+                "No se pudo leer el archivo Excel.";
+
+            mensajeExcel.style.color =
+                "#721c24";
+
+            mensajeExcel.style.background =
+                "#f8d7da";
+        }
+
+    }
+
+}
 
                         // ======================================================
                         // SUBIR Y GUARDAR EXCEL
@@ -4092,7 +4258,36 @@ document.addEventListener(
            );
 
        }
-                
+
+         // ------------------------------
+         // EXCEL HORARIOS
+        // ------------------------------
+
+const btnSubirExcel =
+    document.getElementById(
+        "btnSubirExcel"
+    );
+
+
+if (btnSubirExcel) {
+
+    btnSubirExcel.addEventListener(
+        "click",
+        subirYGuardarExcel
+    );
+
+    console.log(
+        "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
+    );
+
+} else {
+
+    console.error(
+        "NO SE ENCONTRÓ EL BOTÓN btnSubirExcel"
+    );
+
+}
+        
         // ------------------------------
         // USUARIOS
         // ------------------------------
