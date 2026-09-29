@@ -244,6 +244,20 @@
             font-weight: bold;
         }
 
+        /* ==========================================
+           CARGA DE HORARIOS DESDE EXCEL
+           ========================================== */
+        .carga-excel { margin-top: 25px; padding: 18px; border: 1px solid #ddd; border-left: 5px solid #8f0000; border-radius: 10px; background: #fafafa; }
+        .carga-excel h3 { margin-top: 0; margin-bottom: 8px; }
+        .carga-excel p { margin: 6px 0 15px; color: #555; font-size: 14px; }
+        .carga-excel input[type="file"] { width: 100%; padding: 10px; border: 1px solid #bbb; border-radius: 6px; background: white; font-size: 14px; }
+        .btn-excel { background: #198754; color: white; border: none; padding: 11px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-excel:hover { background: #157347; }
+        .btn-excel:disabled { opacity: 0.6; cursor: not-allowed; }
+        .resultado-excel { margin-top: 12px; padding: 10px; border-radius: 6px; display: none; }
+        .resultado-excel.exito { display: block; color: #155724; background: #d4edda; }
+        .resultado-excel.error { display: block; color: #721c24; background: #f8d7da; }
+
         @media (max-width: 700px) {
 
             .grid-formulario {
@@ -737,6 +751,24 @@
 
         <div id="mensaje"></div>
 
+        <!-- ========================================= -->
+        <!-- CARGAR HORARIO DESDE EXCEL -->
+        <!-- ========================================= -->
+        <div class="carga-excel">
+            <h3>📥 Cargar horario semanal desde Excel</h3>
+            <p>
+                Puedes seguir ingresando el horario manualmente como hasta ahora,
+                o cargar un archivo Excel con los horarios de varios trabajadores.
+            </p>
+            <input type="file" id="archivoHorarioExcel" accept=".xlsx,.xls,.csv">
+            <div class="acciones">
+                <button type="button" class="btn-excel" id="btnCargarExcel">
+                    📥 SUBIR Y GUARDAR EXCEL
+                </button>
+            </div>
+            <div id="resultadoExcelHorario" class="resultado-excel"></div>
+        </div>
+
     </section>
 
 
@@ -844,7 +876,7 @@
 
                     <tr>
 
-                        <td colspan="9">
+                        <td colspan="11">
                             Seleccione un rango de fechas.
                         </td>
 
@@ -1038,6 +1070,8 @@
 </div>
 
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
 <script>
 
     /* ==========================================
@@ -1133,6 +1167,186 @@
 
 
     /* ==========================================
+       CARGA DE HORARIOS DESDE EXCEL
+       ========================================== */
+
+    function normalizarTextoExcel(valor) {
+        if (valor === null || valor === undefined) return "";
+        return String(valor).trim();
+    }
+
+    function normalizarFechaExcel(valor) {
+        if (!valor) return "";
+        if (valor instanceof Date && !isNaN(valor.getTime())) {
+            const anio = valor.getFullYear();
+            const mes = String(valor.getMonth() + 1).padStart(2, "0");
+            const dia = String(valor.getDate()).padStart(2, "0");
+            return `${anio}-${mes}-${dia}`;
+        }
+        const texto = String(valor).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto;
+        const partes = texto.split(/[\/\-]/);
+        if (partes.length === 3) {
+            if (partes[0].length === 4) {
+                return `${partes[0]}-${partes[1].padStart(2, "0")}-${partes[2].padStart(2, "0")}`;
+            }
+            return `${partes[2]}-${partes[1].padStart(2, "0")}-${partes[0].padStart(2, "0")}`;
+        }
+        return "";
+    }
+
+    function normalizarHoraExcel(valor) {
+        if (valor === null || valor === undefined || valor === "") return "";
+        if (valor instanceof Date && !isNaN(valor.getTime())) {
+            return `${String(valor.getHours()).padStart(2, "0")}:${String(valor.getMinutes()).padStart(2, "0")}`;
+        }
+        if (typeof valor === "number" && valor >= 0 && valor < 1) {
+            const totalMinutos = Math.round(valor * 24 * 60);
+            const horas = Math.floor(totalMinutos / 60) % 24;
+            const minutos = totalMinutos % 60;
+            return `${String(horas).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
+        }
+        const texto = String(valor).trim();
+        if (/^\d{1,2}:\d{2}/.test(texto)) {
+            const partes = texto.split(":");
+            return `${String(parseInt(partes[0], 10)).padStart(2, "0")}:${partes[1]}`;
+        }
+        return "";
+    }
+
+    function tipoEsDescanso(tipo, entrada, salida) {
+        const texto = normalizarTextoExcel(tipo).toUpperCase();
+        return texto === "DESCANSO" || texto === "DESCANSA" || texto === "D" || (!entrada && !salida && texto !== "TRABAJO");
+    }
+
+    async function cargarHorarioDesdeExcel() {
+        const archivoInput = document.getElementById("archivoHorarioExcel");
+        const boton = document.getElementById("btnCargarExcel");
+        const resultado = document.getElementById("resultadoExcelHorario");
+
+        if (!archivoInput?.files?.[0]) {
+            if (resultado) {
+                resultado.className = "resultado-excel error";
+                resultado.textContent = "Seleccione primero un archivo Excel.";
+            }
+            return;
+        }
+
+        if (typeof XLSX === "undefined") {
+            if (resultado) {
+                resultado.className = "resultado-excel error";
+                resultado.textContent = "No se pudo cargar la librería de Excel. Recargue la página e intente nuevamente.";
+            }
+            return;
+        }
+
+        try {
+            boton.disabled = true;
+            boton.textContent = "⏳ PROCESANDO EXCEL...";
+            resultado.className = "resultado-excel exito";
+            resultado.textContent = "Leyendo archivo...";
+
+            const buffer = await archivoInput.files[0].arrayBuffer();
+            const libro = XLSX.read(buffer, { type: "array", cellDates: true });
+            const nombreHoja = libro.SheetNames.includes("HORARIO_SEMANAL") ? "HORARIO_SEMANAL" : libro.SheetNames[0];
+            const hoja = libro.Sheets[nombreHoja];
+            const filas = XLSX.utils.sheet_to_json(hoja, { defval: "", raw: true });
+
+            if (!filas.length) throw new Error("El Excel no contiene registros de trabajadores.");
+
+            const trabajadores = await llamarSupabase("listar_trabajadores");
+            if (!Array.isArray(trabajadores)) throw new Error("No se pudieron cargar los trabajadores desde Supabase.");
+
+            const porDni = new Map();
+            const porNombre = new Map();
+            trabajadores.forEach(function(trabajador) {
+                const dni = normalizarTextoExcel(trabajador.dni);
+                const nombreCompleto = `${trabajador.nombre || ""} ${trabajador.apellidos || ""}`.trim().toUpperCase();
+                if (dni) porDni.set(dni, trabajador);
+                if (nombreCompleto) porNombre.set(nombreCompleto, trabajador);
+            });
+
+            const dias = [
+                { entrada: "LUN_ENTRADA", salida: "LUN_SALIDA", tipo: "LUN_TIPO" },
+                { entrada: "MAR_ENTRADA", salida: "MAR_SALIDA", tipo: "MAR_TIPO" },
+                { entrada: "MIE_ENTRADA", salida: "MIE_SALIDA", tipo: "MIE_TIPO" },
+                { entrada: "JUE_ENTRADA", salida: "JUE_SALIDA", tipo: "JUE_TIPO" },
+                { entrada: "VIE_ENTRADA", salida: "VIE_SALIDA", tipo: "VIE_TIPO" },
+                { entrada: "SAB_ENTRADA", salida: "SAB_SALIDA", tipo: "SAB_TIPO" },
+                { entrada: "DOM_ENTRADA", salida: "DOM_SALIDA", tipo: "DOM_TIPO" }
+            ];
+
+            let guardados = 0;
+            let omitidos = 0;
+            const errores = [];
+
+            for (const fila of filas) {
+                const dni = normalizarTextoExcel(fila.DNI ?? fila.dni);
+                const nombreExcel = normalizarTextoExcel(fila.TRABAJADOR ?? fila.Trabajador ?? fila.NOMBRE ?? fila.Nombre).toUpperCase();
+                const trabajador = porDni.get(dni) || porNombre.get(nombreExcel);
+
+                if (!trabajador) {
+                    omitidos++;
+                    errores.push(`No encontrado: ${dni || nombreExcel || "sin DNI/nombre"}`);
+                    continue;
+                }
+
+                const fechaInicio = normalizarFechaExcel(fila.FECHA_INICIO_SEMANA ?? fila["Fecha inicio"]);
+                if (!fechaInicio) {
+                    omitidos++;
+                    errores.push(`${trabajador.dni} - ${trabajador.nombre}: fecha de inicio inválida`);
+                    continue;
+                }
+
+                const horarios = dias.map(function(dia, indice) {
+                    const entrada = normalizarHoraExcel(fila[dia.entrada]);
+                    const salida = normalizarHoraExcel(fila[dia.salida]);
+                    const tipo = normalizarTextoExcel(fila[dia.tipo]).toUpperCase();
+                    const descanso = tipoEsDescanso(tipo, entrada, salida);
+                    return {
+                        dia: indice,
+                        hora_entrada: descanso ? "" : entrada,
+                        hora_salida: descanso ? "" : salida,
+                        descanso: descanso
+                    };
+                });
+
+                const respuesta = await llamarSupabase("guardar_horario_semanal", {
+                    p_trabajador_id: trabajador.id,
+                    p_fecha_inicio: fechaInicio,
+                    p_horarios: horarios
+                });
+
+                if (!respuesta || respuesta.ok !== true) {
+                    omitidos++;
+                    errores.push(`${trabajador.dni} - ${trabajador.nombre}: ${respuesta?.mensaje || "no se pudo guardar"}`);
+                    continue;
+                }
+                guardados++;
+            }
+
+            resultado.className = guardados > 0 ? "resultado-excel exito" : "resultado-excel error";
+            resultado.innerHTML = `<strong>Proceso terminado.</strong><br>Horarios guardados: ${guardados}<br>Registros omitidos: ${omitidos}${errores.length ? `<br><br><strong>Detalles:</strong><br>${errores.slice(0, 10).join("<br>")}` : ""}`;
+
+            if (typeof cargarTrabajadores === "function") await cargarTrabajadores();
+            if (typeof cargarListaTrabajadores === "function") await cargarListaTrabajadores();
+        } catch (error) {
+            console.error("Error cargando Excel de horarios:", error);
+            resultado.className = "resultado-excel error";
+            resultado.textContent = error.message || "No se pudo procesar el archivo Excel.";
+        } finally {
+            boton.disabled = false;
+            boton.textContent = "📥 SUBIR Y GUARDAR EXCEL";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const botonExcelHorario = document.getElementById("btnCargarExcel");
+        if (botonExcelHorario) botonExcelHorario.addEventListener("click", cargarHorarioDesdeExcel);
+    });
+
+
+    /* ==========================================
        REPORTES
        ========================================== */
 
@@ -1174,7 +1388,7 @@
 <!-- JAVASCRIPT PRINCIPAL -->
 <!-- ========================================= -->
 
-<script src="admin.js?v=5"></script>
+<script src="admin.js?v=6"></script>
 
 
 </body>
