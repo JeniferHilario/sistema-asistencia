@@ -1086,31 +1086,58 @@
     /* ==========================================
        CAMBIAR SECCIÓN
        ========================================== */
+     function mostrarSeccion(nombre) {
 
-    function mostrarSeccion(nombre) {
-
-        const secciones =
-            document.querySelectorAll(".seccion");
-
-        secciones.forEach(function(seccion) {
-
-            seccion.classList.remove("activa");
-
-        });
+    const secciones =
+        document.querySelectorAll(".seccion");
 
 
-        const seleccionada =
-            document.getElementById(nombre);
+    secciones.forEach(
+        function(seccion) {
 
-        if (seleccionada) {
-
-            seleccionada.classList.add("activa");
+            seccion.classList.remove(
+                "activa"
+            );
 
         }
+    );
+
+
+    const seleccionada =
+        document.getElementById(nombre);
+
+
+    if (seleccionada) {
+
+        seleccionada.classList.add(
+            "activa"
+        );
 
     }
 
 
+    // ==================================================
+    // SI ENTRAMOS A HORARIOS
+    // VOLVER A CARGAR LOS TRABAJADORES
+    // ==================================================
+
+    if (
+        nombre === "horarios" &&
+        typeof cargarTrabajadores === "function"
+    ) {
+
+        console.log(
+            "Entrando a HORARIOS: cargando trabajadores..."
+        );
+
+
+        cargarTrabajadores();
+
+    }
+
+}
+
+    
     /* ==========================================
        FORMULARIO TRABAJADOR
        ========================================== */
