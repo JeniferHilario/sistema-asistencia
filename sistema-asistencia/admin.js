@@ -2841,13 +2841,14 @@ function leerArchivoExcel(archivo) {
                             XLSX.read(
                                 datos,
                                 {
-                                    type: "array"
+                                    type: "array",
+                                    cellDates: true
                                 }
                             );
 
 
                         // ------------------------------------------------
-                        // Buscar hoja HORARIO_SEMANAL
+                        // BUSCAR HOJA HORARIO_SEMANAL
                         // ------------------------------------------------
 
                         let nombreHoja =
@@ -2855,7 +2856,7 @@ function leerArchivoExcel(archivo) {
                                 function(nombre) {
 
                                     return (
-                                        nombre
+                                        String(nombre)
                                             .trim()
                                             .toUpperCase()
                                             ===
@@ -2866,6 +2867,7 @@ function leerArchivoExcel(archivo) {
                             );
 
 
+                        // Si no existe, usar la primera hoja
                         if (!nombreHoja) {
 
                             nombreHoja =
@@ -2891,25 +2893,196 @@ function leerArchivoExcel(archivo) {
                             ];
 
 
+                        // ------------------------------------------------
+                        // CONVERTIR EXCEL A OBJETOS
+                        // ------------------------------------------------
+
                         const filas =
                             XLSX.utils.sheet_to_json(
                                 hoja,
                                 {
                                     defval: "",
-                                    raw: true
+                                    raw: false,
+                                    dateNF: "yyyy-mm-dd"
                                 }
                             );
 
 
+                        // ------------------------------------------------
+                        // VALIDAR QUE EL EXCEL TENGA DATOS
+                        // ------------------------------------------------
+
+                        if (
+                            !Array.isArray(filas) ||
+                            filas.length === 0
+                        ) {
+
+                            reject(
+                                new Error(
+                                    "El Excel no contiene registros."
+                                )
+                            );
+
+                            return;
+                        }
+
+
+                        // ------------------------------------------------
+                        // NORMALIZAR DATOS
+                        // ------------------------------------------------
+
+                        const filasNormalizadas =
+                            filas.map(
+                                function(fila) {
+
+                                    const nuevaFila = {};
+
+
+                                    Object.keys(fila)
+                                        .forEach(
+                                            function(clave) {
+
+                                                let valor =
+                                                    fila[clave];
+
+
+                                                // -------------------------
+                                                // LIMPIAR TEXTO
+                                                // -------------------------
+
+                                                if (
+                                                    typeof valor ===
+                                                    "string"
+                                                ) {
+
+                                                    valor =
+                                                        valor.trim();
+
+                                                }
+
+
+                                                // -------------------------
+                                                // NORMALIZAR DNI
+                                                // -------------------------
+
+                                                if (
+                                                    clave
+                                                        .toUpperCase()
+                                                        ===
+                                                    "DNI"
+                                                ) {
+
+                                                    valor =
+                                                        String(
+                                                            valor ?? ""
+                                                        )
+                                                        .trim()
+                                                        .replace(
+                                                            /\.0$/,
+                                                            ""
+                                                        );
+
+                                                }
+
+
+                                                // -------------------------
+                                                // NORMALIZAR FECHA
+                                                // -------------------------
+
+                                                if (
+                                                    clave
+                                                        .toUpperCase()
+                                                        ===
+                                                    "FECHA_INICIO_SEMANA"
+                                                ) {
+
+                                                    valor =
+                                                        convertirFechaExcel(
+                                                            valor
+                                                        );
+
+                                                }
+
+
+                                                // -------------------------
+                                                // NORMALIZAR HORAS
+                                                // -------------------------
+
+                                                if (
+                                                    clave
+                                                        .toUpperCase()
+                                                        .includes(
+                                                            "_ENTRADA"
+                                                        ) ||
+                                                    clave
+                                                        .toUpperCase()
+                                                        .includes(
+                                                            "_SALIDA"
+                                                        )
+                                                ) {
+
+                                                    valor =
+                                                        convertirHoraExcel(
+                                                            valor
+                                                        );
+
+                                                }
+
+
+                                                nuevaFila[clave] =
+                                                    valor;
+
+                                            }
+                                        );
+
+
+                                    return nuevaFila;
+
+                                }
+                            );
+
+
+                        // ------------------------------------------------
+                        // DEVOLVER INFORMACIÓN
+                        // ------------------------------------------------
+
+                        console.log(
+                            "Excel leído correctamente."
+                        );
+
+                        console.log(
+                            "Hoja:",
+                            nombreHoja
+                        );
+
+                        console.log(
+                            "Registros:",
+                            filasNormalizadas.length
+                        );
+
+                        console.log(
+                            "Primera fila:",
+                            filasNormalizadas[0]
+                        );
+
+
                         resolve(
-                            filas
+                            filasNormalizadas
                         );
 
 
                     } catch (error) {
 
-                        reject(
+                        console.error(
+                            "Error procesando Excel:",
                             error
+                        );
+
+
+                        reject(
+                            new Error(
+                                "No se pudo procesar el archivo Excel."
+                            )
                         );
 
                     }
@@ -2938,6 +3111,241 @@ function leerArchivoExcel(archivo) {
 
 }
 
+
+// ======================================================
+// CONVERTIR FECHA DEL EXCEL
+// ======================================================
+
+function convertirFechaExcel(valor) {
+
+    if (
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ) {
+
+        return "";
+
+    }
+
+
+    // Si ya viene como texto YYYY-MM-DD
+    if (
+        typeof valor === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(
+            valor.trim()
+        )
+    ) {
+
+        return valor.trim();
+
+    }
+
+
+    // Si viene como fecha
+    if (
+        Object.prototype.toString.call(valor)
+        ===
+        "[object Date]"
+    ) {
+
+        if (isNaN(valor.getTime())) {
+            return "";
+        }
+
+
+        const año =
+            valor.getFullYear();
+
+
+        const mes =
+            String(
+                valor.getMonth() + 1
+            ).padStart(2, "0");
+
+
+        const dia =
+            String(
+                valor.getDate()
+            ).padStart(2, "0");
+
+
+        return `${año}-${mes}-${dia}`;
+
+    }
+
+
+    // Si viene como texto de fecha
+    const texto =
+        String(valor).trim();
+
+
+    const fecha =
+        new Date(texto);
+
+
+    if (
+        !isNaN(fecha.getTime())
+    ) {
+
+        const año =
+            fecha.getFullYear();
+
+
+        const mes =
+            String(
+                fecha.getMonth() + 1
+            ).padStart(2, "0");
+
+
+        const dia =
+            String(
+                fecha.getDate()
+            ).padStart(2, "0");
+
+
+        return `${año}-${mes}-${dia}`;
+
+    }
+
+
+    return texto;
+}
+
+
+// ======================================================
+// CONVERTIR HORA DEL EXCEL
+// ======================================================
+
+function convertirHoraExcel(valor) {
+
+    if (
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ) {
+
+        return "";
+
+    }
+
+
+    // --------------------------------------------
+    // SI ES UNA FECHA DE JAVASCRIPT
+    // --------------------------------------------
+
+    if (
+        Object.prototype.toString.call(valor)
+        ===
+        "[object Date]"
+    ) {
+
+        if (isNaN(valor.getTime())) {
+            return "";
+        }
+
+
+        const horas =
+            String(
+                valor.getHours()
+            ).padStart(2, "0");
+
+
+        const minutos =
+            String(
+                valor.getMinutes()
+            ).padStart(2, "0");
+
+
+        return `${horas}:${minutos}`;
+
+    }
+
+
+    // --------------------------------------------
+    // SI ES UN NÚMERO DE EXCEL
+    // --------------------------------------------
+
+    if (
+        typeof valor === "number"
+    ) {
+
+        const totalMinutos =
+            Math.round(
+                valor * 24 * 60
+            );
+
+
+        const horas =
+            Math.floor(
+                totalMinutos / 60
+            ) % 24;
+
+
+        const minutos =
+            totalMinutos % 60;
+
+
+        return (
+            String(horas).padStart(2, "0") +
+            ":" +
+            String(minutos).padStart(2, "0")
+        );
+
+    }
+
+
+    // --------------------------------------------
+    // SI ES TEXTO
+    // --------------------------------------------
+
+    let texto =
+        String(valor)
+            .trim();
+
+
+    // Ejemplo: 09:00
+    if (
+        /^\d{1,2}:\d{2}$/.test(texto)
+    ) {
+
+        const partes =
+            texto.split(":");
+
+
+        return (
+            String(
+                parseInt(partes[0], 10)
+            ).padStart(2, "0") +
+            ":" +
+            partes[1]
+        );
+
+    }
+
+
+    // Ejemplo: 09:00:00
+    if (
+        /^\d{1,2}:\d{2}:\d{2}$/.test(texto)
+    ) {
+
+        const partes =
+            texto.split(":");
+
+
+        return (
+            String(
+                parseInt(partes[0], 10)
+            ).padStart(2, "0") +
+            ":" +
+            partes[1]
+        );
+
+    }
+
+
+    return texto;
+}
 
 // ======================================================
 // OBTENER VALOR DEL EXCEL
