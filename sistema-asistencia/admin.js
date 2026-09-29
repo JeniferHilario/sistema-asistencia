@@ -4092,35 +4092,7 @@ document.addEventListener(
            );
 
        }
-        // ------------------------------
-// EXCEL HORARIOS
-// ------------------------------
-
-const btnSubirExcel =
-    document.getElementById(
-        "btnSubirExcel"
-    );
-
-
-if (btnSubirExcel) {
-
-    btnSubirExcel.addEventListener(
-        "click",
-        subirYGuardarExcel
-    );
-
-    console.log(
-        "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
-    );
-
-} else {
-
-    console.error(
-        "NO SE ENCONTRÓ EL BOTÓN btnSubirExcel"
-    );
-
-}
-        
+                
         // ------------------------------
         // USUARIOS
         // ------------------------------
