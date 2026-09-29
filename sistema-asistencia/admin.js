@@ -2846,7 +2846,150 @@ function leerArchivoExcel(archivo) {
                                 }
                             );
 
+                        // ======================================================
+                        // SUBIR Y GUARDAR EXCEL
+                       // ======================================================
 
+                     async function subirYGuardarExcel() {
+
+                    console.log("BOTÓN EXCEL PRESIONADO");
+
+                   const archivoInput =
+                    document.getElementById("archivoExcel");
+
+                   const mensajeExcel =
+                   document.getElementById("mensajeExcel");
+
+
+                  // ------------------------------------------
+                 // VERIFICAR ARCHIVO
+                // ------------------------------------------
+
+                 if (!archivoInput) {
+
+                 console.error(
+                   "No existe el elemento archivoExcel"
+              );
+
+             return;
+             }
+
+
+              if (!archivoInput.files ||
+                archivoInput.files.length === 0) {
+
+             if (mensajeExcel) {
+
+                mensajeExcel.textContent =
+                "Seleccione primero un archivo Excel.";
+
+               mensajeExcel.style.color =
+                "#721c24";
+
+              mensajeExcel.style.background =
+                "#f8d7da";
+               }
+
+                  return;
+              }
+
+
+              const archivo =
+               archivoInput.files[0];
+
+
+            console.log(
+             "Archivo seleccionado:",
+               archivo.name
+            );
+
+
+    try {
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                "Leyendo archivo Excel...";
+
+            mensajeExcel.style.color =
+                "#155724";
+
+            mensajeExcel.style.background =
+                "#d4edda";
+        }
+
+
+        // ------------------------------------------
+        // LEER EXCEL
+        // ------------------------------------------
+
+        const filas =
+            await leerArchivoExcel(
+                archivo
+            );
+
+
+        console.log(
+            "FILAS DEL EXCEL:",
+            filas
+        );
+
+
+        if (!Array.isArray(filas) ||
+            filas.length === 0) {
+
+            throw new Error(
+                "El Excel no contiene registros."
+            );
+        }
+
+
+        // ------------------------------------------
+        // MOSTRAR RESULTADO
+        // ------------------------------------------
+
+        console.log(
+            "Cantidad de filas:",
+            filas.length
+        );
+
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                `Excel leído correctamente. Se encontraron ${filas.length} registros.`;
+
+            mensajeExcel.style.color =
+                "#155724";
+
+            mensajeExcel.style.background =
+                "#d4edda";
+        }
+
+    } catch (error) {
+
+        console.error(
+            "ERROR PROCESANDO EXCEL:",
+            error
+        );
+
+
+        if (mensajeExcel) {
+
+            mensajeExcel.textContent =
+                error.message ||
+                "No se pudo procesar el Excel.";
+
+            mensajeExcel.style.color =
+                "#721c24";
+
+            mensajeExcel.style.background =
+                "#f8d7da";
+        }
+
+    }
+
+}
                         // ------------------------------------------------
                         // BUSCAR HOJA HORARIO_SEMANAL
                         // ------------------------------------------------
@@ -3949,7 +4092,35 @@ document.addEventListener(
            );
 
        }
+        // ------------------------------
+// EXCEL HORARIOS
+// ------------------------------
 
+const btnSubirExcel =
+    document.getElementById(
+        "btnSubirExcel"
+    );
+
+
+if (btnSubirExcel) {
+
+    btnSubirExcel.addEventListener(
+        "click",
+        subirYGuardarExcel
+    );
+
+    console.log(
+        "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
+    );
+
+} else {
+
+    console.error(
+        "NO SE ENCONTRÓ EL BOTÓN btnSubirExcel"
+    );
+
+}
+        
         // ------------------------------
         // USUARIOS
         // ------------------------------
