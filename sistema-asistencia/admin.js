@@ -254,23 +254,95 @@ async function cargarTrabajadores() {
 
 async function cargarListaTrabajadores() {
 
-    if (!listaTrabajadores) return;
+    const lista =
+        document.getElementById("listaTrabajadores");
+
+    if (!lista) {
+        console.warn(
+            "No existe listaTrabajadores"
+        );
+        return;
+    }
+
+    lista.innerHTML = `
+        <tr>
+            <td colspan="7">
+                Cargando trabajadores...
+            </td>
+        </tr>
+    `;
 
     try {
 
-        const trabajadores =
+        console.log(
+            "Consultando trabajadores..."
+        );
+
+        const respuesta =
             await llamarSupabase(
                 "listar_todos_trabajadores"
             );
 
-        listaTrabajadores.innerHTML = "";
+        console.log(
+            "RESPUESTA TRABAJADORES:",
+            respuesta
+        );
+
+
+        // ==================================================
+        // NORMALIZAR RESPUESTA
+        // ==================================================
+
+        let trabajadores = [];
+
+
+        if (Array.isArray(respuesta)) {
+
+            trabajadores = respuesta;
+
+        }
+        else if (
+            respuesta &&
+            Array.isArray(respuesta.trabajadores)
+        ) {
+
+            trabajadores =
+                respuesta.trabajadores;
+
+        }
+        else if (
+            respuesta &&
+            Array.isArray(respuesta.data)
+        ) {
+
+            trabajadores =
+                respuesta.data;
+
+        }
+        else if (
+            respuesta &&
+            Array.isArray(respuesta.resultado)
+        ) {
+
+            trabajadores =
+                respuesta.resultado;
+        }
+
+
+        console.log(
+            "TRABAJADORES NORMALIZADOS:",
+            trabajadores
+        );
+
+
+        lista.innerHTML = "";
+
 
         if (
-            !Array.isArray(trabajadores) ||
             trabajadores.length === 0
         ) {
 
-            listaTrabajadores.innerHTML = `
+            lista.innerHTML = `
                 <tr>
                     <td colspan="7">
                         No hay trabajadores registrados.
@@ -282,126 +354,82 @@ async function cargarListaTrabajadores() {
         }
 
 
-        trabajadores.forEach(function(trabajador) {
+        // ==================================================
+        // MOSTRAR TRABAJADORES
+        // ==================================================
 
-            const fila =
-                document.createElement("tr");
+        trabajadores.forEach(
+            function(trabajador) {
 
-
-            const tdDni =
-                document.createElement("td");
-
-            tdDni.textContent =
-                trabajador.dni || "";
+                const fila =
+                    document.createElement("tr");
 
 
-            const tdNombre =
-                document.createElement("td");
+                fila.innerHTML = `
+                    <td>
+                        ${trabajador.dni || ""}
+                    </td>
 
-            tdNombre.textContent =
-                trabajador.nombre || "";
+                    <td>
+                        ${trabajador.nombre || ""}
+                    </td>
 
+                    <td>
+                        ${trabajador.apellidos || ""}
+                    </td>
 
-            const tdApellidos =
-                document.createElement("td");
+                    <td>
+                        ${trabajador.area || ""}
+                    </td>
 
-            tdApellidos.textContent =
-                trabajador.apellidos || "";
+                    <td>
+                        ${trabajador.cargo || ""}
+                    </td>
 
+                    <td>
+                        ${
+                            trabajador.activo === false
+                                ? "Inactivo"
+                                : "Activo"
+                        }
+                    </td>
 
-            const tdArea =
-                document.createElement("td");
+                    <td>
 
-            tdArea.textContent =
-                trabajador.area || "";
+                        <button
+                            type="button"
+                            class="btn-editar"
+                            onclick="editarTrabajador('${trabajador.id}')">
 
+                            ✏️ Editar
 
-            const tdCargo =
-                document.createElement("td");
+                        </button>
 
-            tdCargo.textContent =
-                trabajador.cargo || "";
-
-
-            const tdEstado =
-                document.createElement("td");
-
-            tdEstado.textContent =
-                trabajador.activo
-                    ? "Activo"
-                    : "Inactivo";
-
-            tdEstado.style.fontWeight = "bold";
-
-            tdEstado.style.color =
-                trabajador.activo
-                    ? "#198754"
-                    : "#dc3545";
-
-
-            const tdAccion =
-                document.createElement("td");
+                    </td>
+                `;
 
 
-            const botonEditar =
-                document.createElement("button");
+                lista.appendChild(fila);
 
-            botonEditar.type = "button";
-
-            botonEditar.textContent =
-                "EDITAR";
-
-            botonEditar.className =
-                "btn-estado btn-activo";
+            }
+        );
 
 
-            botonEditar.addEventListener(
-                "click",
-                function() {
-
-                    editarTrabajador(
-                        trabajador.id,
-                        trabajador.dni || "",
-                        trabajador.nombre || "",
-                        trabajador.apellidos || "",
-                        trabajador.area || "",
-                        trabajador.cargo || "",
-                        trabajador.activo === true
-                    );
-
-                }
-            );
-
-
-            tdAccion.appendChild(
-                botonEditar
-            );
-
-
-            fila.appendChild(tdDni);
-            fila.appendChild(tdNombre);
-            fila.appendChild(tdApellidos);
-            fila.appendChild(tdArea);
-            fila.appendChild(tdCargo);
-            fila.appendChild(tdEstado);
-            fila.appendChild(tdAccion);
-
-
-            listaTrabajadores.appendChild(
-                fila
-            );
-
-        });
+        console.log(
+            "TRABAJADORES MOSTRADOS:",
+            trabajadores.length
+        );
 
 
     } catch (error) {
 
         console.error(
-            "Error cargando trabajadores:",
+            "ERROR CARGANDO TRABAJADORES:",
             error
         );
 
-        listaTrabajadores.innerHTML = `
+
+        lista.innerHTML = `
             <tr>
                 <td colspan="7">
                     Error al cargar trabajadores.
@@ -410,7 +438,6 @@ async function cargarListaTrabajadores() {
         `;
     }
 }
-
 
 // ======================================================
 // MOSTRAR FORMULARIO NUEVO TRABAJADOR
@@ -1893,9 +1920,8 @@ function obtenerFechaArchivo() {
         .split("T")[0];
 }
 
-
 // ======================================================
-// USUARIOS ADMINISTRADORES
+// CARGAR USUARIOS ADMINISTRADORES
 // ======================================================
 
 async function cargarUsuariosAdmin() {
@@ -1906,7 +1932,14 @@ async function cargarUsuariosAdmin() {
         );
 
 
-    if (!lista) return;
+    if (!lista) {
+
+        console.warn(
+            "No existe listaUsuariosAdmin"
+        );
+
+        return;
+    }
 
 
     lista.innerHTML = `
@@ -1920,19 +1953,75 @@ async function cargarUsuariosAdmin() {
 
     try {
 
-        const resultado =
+        console.log(
+            "Consultando usuarios administradores..."
+        );
+
+
+        const respuesta =
             await llamarSupabase(
                 "listar_usuarios_admin",
                 {}
             );
 
 
+        console.log(
+            "RESPUESTA USUARIOS:",
+            respuesta
+        );
+
+
+        // ==================================================
+        // NORMALIZAR RESPUESTA
+        // ==================================================
+
+        let usuarios = [];
+
+
+        if (Array.isArray(respuesta)) {
+
+            usuarios = respuesta;
+
+        }
+        else if (
+            respuesta &&
+            Array.isArray(respuesta.usuarios)
+        ) {
+
+            usuarios =
+                respuesta.usuarios;
+
+        }
+        else if (
+            respuesta &&
+            Array.isArray(respuesta.data)
+        ) {
+
+            usuarios =
+                respuesta.data;
+
+        }
+        else if (
+            respuesta &&
+            Array.isArray(respuesta.resultado)
+        ) {
+
+            usuarios =
+                respuesta.resultado;
+        }
+
+
+        console.log(
+            "USUARIOS NORMALIZADOS:",
+            usuarios
+        );
+
+
         lista.innerHTML = "";
 
 
         if (
-            !Array.isArray(resultado) ||
-            resultado.length === 0
+            usuarios.length === 0
         ) {
 
             lista.innerHTML = `
@@ -1947,123 +2036,82 @@ async function cargarUsuariosAdmin() {
         }
 
 
-        resultado.forEach(function(usuario) {
+        // ==================================================
+        // MOSTRAR USUARIOS
+        // ==================================================
 
-            const fila =
-                document.createElement("tr");
+        usuarios.forEach(
+            function(usuario) {
 
-
-            const tdUsuario =
-                document.createElement("td");
-
-            tdUsuario.textContent =
-                usuario.usuario || "";
+                const fila =
+                    document.createElement("tr");
 
 
-            const tdNombre =
-                document.createElement("td");
-
-            tdNombre.textContent =
-                usuario.nombre || "";
+                const activo =
+                    usuario.activo !== false;
 
 
-            const tdRol =
-                document.createElement("td");
+                fila.innerHTML = `
+                    <td>
+                        ${usuario.usuario || ""}
+                    </td>
 
-            tdRol.textContent =
-                usuario.rol || "";
+                    <td>
+                        ${usuario.nombre || ""}
+                    </td>
 
+                    <td>
+                        ${usuario.rol || ""}
+                    </td>
 
-            const tdEstado =
-                document.createElement("td");
+                    <td
+                        style="
+                            font-weight:bold;
+                            color:${
+                                activo
+                                    ? "#198754"
+                                    : "#dc3545"
+                            };
+                        "
+                    >
+                        ${
+                            activo
+                                ? "Activo"
+                                : "Inactivo"
+                        }
+                    </td>
 
-            tdEstado.textContent =
-                usuario.activo
-                    ? "Activo"
-                    : "Inactivo";
+                    <td>
 
+                        <button
+                            type="button"
+                            class="btn-editar"
+                            onclick="editarUsuarioAdmin('${usuario.id}')">
 
-            tdEstado.style.fontWeight =
-                "bold";
+                            ✏️ Editar
 
-            tdEstado.style.color =
-                usuario.activo
-                    ? "#198754"
-                    : "#dc3545";
+                        </button>
 
-
-            const tdAccion =
-                document.createElement("td");
-
-
-            const boton =
-                document.createElement("button");
-
-
-            boton.type = "button";
-
-            boton.className =
-                usuario.activo
-                    ? "btn-estado btn-inactivo"
-                    : "btn-estado btn-activo";
-
-
-            boton.textContent =
-                usuario.activo
-                    ? "DESACTIVAR"
-                    : "ACTIVAR";
+                    </td>
+                `;
 
 
-            boton.addEventListener(
-                "click",
-                function() {
+                lista.appendChild(fila);
 
-                    cambiarEstadoUsuario(
-                        usuario.id,
-                        usuario.activo
-                    );
-
-                }
-            );
+            }
+        );
 
 
-            tdAccion.appendChild(
-                boton
-            );
-
-
-            fila.appendChild(
-                tdUsuario
-            );
-
-            fila.appendChild(
-                tdNombre
-            );
-
-            fila.appendChild(
-                tdRol
-            );
-
-            fila.appendChild(
-                tdEstado
-            );
-
-            fila.appendChild(
-                tdAccion
-            );
-
-
-            lista.appendChild(
-                fila
-            );
-
-        });
+        console.log(
+            "USUARIOS MOSTRADOS:",
+            usuarios.length
+        );
 
 
     } catch (error) {
 
         console.error(
-            "Error cargando usuarios:",
+            "ERROR CARGANDO USUARIOS:",
             error
         );
 
@@ -2071,14 +2119,12 @@ async function cargarUsuariosAdmin() {
         lista.innerHTML = `
             <tr>
                 <td colspan="5">
-                    Error al cargar los usuarios.
+                    Error al cargar usuarios.
                 </td>
             </tr>
         `;
     }
 }
-
-
 // ======================================================
 // CREAR USUARIO
 // ======================================================
