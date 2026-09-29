@@ -929,46 +929,27 @@ function mostrarMensajeHorario(
     }
 }
 
- // ======================================================
+// ======================================================
 // CARGAR HORARIO EXISTENTE
 // ======================================================
 
 async function cargarHorarioExistente() {
 
-    if (
-        !trabajadorSelect ||
-        !fechaInicio
-    ) {
+    if (!trabajadorSelect || !fechaInicio) {
         return;
     }
-
 
     const trabajadorId =
         trabajadorSelect.value;
 
-
     const fechaBase =
         fechaInicio.value;
 
-
-    if (
-        !trabajadorId ||
-        !fechaBase
-    ) {
+    if (!trabajadorId || !fechaBase) {
         return;
     }
 
-
     try {
-
-        console.log(
-            "CARGANDO HORARIO:",
-            {
-                trabajadorId,
-                fechaBase
-            }
-        );
-
 
         const resultado =
             await llamarSupabase(
@@ -982,22 +963,27 @@ async function cargarHorarioExistente() {
                 }
             );
 
-
         console.log(
-            "RESPUESTA HORARIO:",
+            "HORARIO RECIBIDO:",
             resultado
         );
 
-
-        if (!resultado) {
-
+        if (
+            !resultado ||
+            resultado.ok !== true ||
+            !Array.isArray(resultado.horarios)
+        ) {
             console.log(
-                "No existe horario para este trabajador y semana."
+                "No se encontraron horarios."
             );
 
             return;
         }
 
+
+        // ==================================================
+        // NOMBRES DE LOS DÍAS
+        // ==================================================
 
         const dias = [
             "lunes",
@@ -1011,165 +997,87 @@ async function cargarHorarioExistente() {
 
 
         // ==================================================
-        // PREPARAR RESULTADO
+        // LIMPIAR TODOS LOS CAMPOS
         // ==================================================
 
-        let horarios = resultado;
-
-
-        // --------------------------------------------------
-        // SI SUPABASE DEVUELVE UN ARRAY
-        // --------------------------------------------------
-
-        if (
-            Array.isArray(resultado)
-        ) {
-
-            horarios = {};
-
-
-            resultado.forEach(
-                function(registro) {
-
-                    let dia =
-                        registro.dia;
-
-
-                    // Si viene como número:
-                    // 0 lunes
-                    // 1 martes
-                    // etc.
-
-                    if (
-                        typeof dia === "number"
-                    ) {
-
-                        dia =
-                            dias[dia];
-                    }
-
-
-                    if (
-                        typeof dia === "string"
-                    ) {
-
-                        dia =
-                            dia
-                                .trim()
-                                .toLowerCase();
-
-                    }
-
-
-                    if (
-                        dia &&
-                        dias.includes(dia)
-                    ) {
-
-                        horarios[dia] =
-                            registro;
-                    }
-
-                }
-            );
-        }
+        limpiarHorarios();
 
 
         // ==================================================
-        // MOSTRAR LUNES A DOMINGO
+        // COLOCAR CADA HORARIO
         // ==================================================
 
-        dias.forEach(
-            function(dia) {
+        resultado.horarios.forEach(
+            function(horario) {
 
-                const horario =
-                    horarios[dia];
+                const numeroDia =
+                    Number(horario.dia);
 
-
-                const entrada =
-                    document.getElementById(
-                        `${dia}Entrada`
-                    );
+                const nombreDia =
+                    dias[numeroDia];
 
 
-                const salida =
-                    document.getElementById(
-                        `${dia}Salida`
-                    );
-
-
-                const descanso =
-                    document.getElementById(
-                        `${dia}Descanso`
-                    );
-
-
-                // Limpiar primero
-
-                if (entrada) {
-
-                    entrada.value = "";
-                }
-
-
-                if (salida) {
-
-                    salida.value = "";
-                }
-
-
-                if (descanso) {
-
-                    descanso.checked = false;
-                }
-
-
-                // Si no hay horario ese día
-
-                if (!horario) {
-
+                if (!nombreDia) {
                     return;
                 }
 
 
-                // ==================================================
+                const entrada =
+                    document.getElementById(
+                        `${nombreDia}Entrada`
+                    );
+
+                const salida =
+                    document.getElementById(
+                        `${nombreDia}Salida`
+                    );
+
+                const descanso =
+                    document.getElementById(
+                        `${nombreDia}Descanso`
+                    );
+
+
+                // ==========================================
                 // ENTRADA
-                // ==================================================
+                // ==========================================
 
                 if (entrada) {
 
                     entrada.value =
-                        horario.hora_entrada ||
-                        "";
+                        horario.hora_entrada
+                            ? horario.hora_entrada.substring(
+                                0,
+                                5
+                            )
+                            : "";
                 }
 
 
-                // ==================================================
+                // ==========================================
                 // SALIDA
-                // ==================================================
+                // ==========================================
 
                 if (salida) {
 
                     salida.value =
-                        horario.hora_salida ||
-                        "";
+                        horario.hora_salida
+                            ? horario.hora_salida.substring(
+                                0,
+                                5
+                            )
+                            : "";
                 }
 
 
-                // ==================================================
+                // ==========================================
                 // DESCANSO
-                // ==================================================
+                // ==========================================
 
                 if (descanso) {
 
                     descanso.checked =
-                        horario.descanso === true ||
-                        String(
-                            horario.tipo || ""
-                        )
-                            .trim()
-                            .toUpperCase()
-                            === "DESCANSO";
+                        horario.descanso === true;
                 }
 
             }
@@ -1177,14 +1085,13 @@ async function cargarHorarioExistente() {
 
 
         console.log(
-            "HORARIO MOSTRADO CORRECTAMENTE"
+            "HORARIO CARGADO CORRECTAMENTE"
         );
-
 
     } catch (error) {
 
         console.error(
-            "ERROR CARGANDO HORARIO:",
+            "Error cargando horario:",
             error
         );
 
@@ -1193,7 +1100,8 @@ async function cargarHorarioExistente() {
             "red"
         );
     }
-}   
+}
+   
 // ======================================================
 // LIMPIAR HORARIOS
 // ======================================================
