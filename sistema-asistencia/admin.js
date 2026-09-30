@@ -1355,7 +1355,6 @@ async function consultarReporte() {
     }
 }
 
-
 // ======================================================
 // MOSTRAR REPORTE
 // ======================================================
@@ -1367,12 +1366,9 @@ function mostrarReporte(datos) {
             "listaReporte"
         );
 
-
     if (!lista) return;
 
-
     lista.innerHTML = "";
-
 
     if (
         !Array.isArray(datos) ||
@@ -1381,7 +1377,7 @@ function mostrarReporte(datos) {
 
         lista.innerHTML = `
             <tr>
-                <td colspan="10">
+                <td colspan="11">
                     No hay registros para el rango seleccionado.
                 </td>
             </tr>
@@ -1396,6 +1392,10 @@ function mostrarReporte(datos) {
         const fila =
             document.createElement("tr");
 
+
+        // ==================================================
+        // DATOS BÁSICOS
+        // ==================================================
 
         const fecha =
             obtenerValor(
@@ -1456,6 +1456,50 @@ function mostrarReporte(datos) {
             );
 
 
+        // ==================================================
+        // UBICACIÓN
+        // ==================================================
+
+        const latEntrada =
+            obtenerValor(
+                registro,
+                [
+                    "latitud_entrada"
+                ]
+            );
+
+
+        const lonEntrada =
+            obtenerValor(
+                registro,
+                [
+                    "longitud_entrada"
+                ]
+            );
+
+
+        const latSalida =
+            obtenerValor(
+                registro,
+                [
+                    "latitud_salida"
+                ]
+            );
+
+
+        const lonSalida =
+            obtenerValor(
+                registro,
+                [
+                    "longitud_salida"
+                ]
+            );
+
+
+        // ==================================================
+        // ESTADO
+        // ==================================================
+
         const estado =
             obtenerValor(
                 registro,
@@ -1497,6 +1541,60 @@ function mostrarReporte(datos) {
             );
 
 
+        // ==================================================
+        // CONSTRUIR UBICACIÓN
+        // ==================================================
+
+        let ubicacion = "Sin ubicación";
+
+
+        if (
+            latEntrada !== "" &&
+            latEntrada !== null &&
+            lonEntrada !== "" &&
+            lonEntrada !== null
+        ) {
+
+            ubicacion = `
+                <a
+                    href="https://www.google.com/maps?q=${latEntrada},${lonEntrada}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Ver ubicación de entrada"
+                >
+                    📍 Ver entrada
+                </a>
+            `;
+
+        }
+
+
+        if (
+            latSalida !== "" &&
+            latSalida !== null &&
+            lonSalida !== "" &&
+            lonSalida !== null
+        ) {
+
+            ubicacion += `
+                <br>
+                <a
+                    href="https://www.google.com/maps?q=${latSalida},${lonSalida}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Ver ubicación de salida"
+                >
+                    📍 Ver salida
+                </a>
+            `;
+
+        }
+
+
+        // ==================================================
+        // AGREGAR CELDAS
+        // ==================================================
+
         agregarCelda(
             fila,
             formatearFecha(fecha)
@@ -1533,12 +1631,21 @@ function mostrarReporte(datos) {
         );
 
 
+        // ⭐ UBICACIÓN
+        agregarCeldaHTML(
+            fila,
+            ubicacion
+        );
+
+
+        // ⭐ ESTADO
         agregarCelda(
             fila,
             estado
         );
 
 
+        // ⭐ TARDANZA
         agregarCelda(
             fila,
             tardanza === "" ||
@@ -1548,6 +1655,7 @@ function mostrarReporte(datos) {
         );
 
 
+        // ⭐ HORAS
         agregarCelda(
             fila,
             horas === "" ||
@@ -1557,6 +1665,7 @@ function mostrarReporte(datos) {
         );
 
 
+        // ⭐ HORAS EXTRAS
         agregarCelda(
             fila,
             horasExtras === "" ||
@@ -1572,7 +1681,6 @@ function mostrarReporte(datos) {
 
     });
 }
-
 
 // ======================================================
 // OBTENER VALOR
@@ -1733,6 +1841,7 @@ function descargarExcel() {
         "Área",
         "Entrada",
         "Salida",
+        "Ubicación",
         "Estado",
         "Tardanza (min)",
         "Horas trabajadas",
