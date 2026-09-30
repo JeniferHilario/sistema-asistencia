@@ -1362,13 +1362,16 @@ async function consultarReporte() {
 function mostrarReporte(datos) {
 
     const lista =
-        document.getElementById(
-            "listaReporte"
-        );
+        document.getElementById("listaReporte");
 
     if (!lista) return;
 
     lista.innerHTML = "";
+
+
+    // ==================================================
+    // SIN DATOS
+    // ==================================================
 
     if (
         !Array.isArray(datos) ||
@@ -1387,6 +1390,10 @@ function mostrarReporte(datos) {
     }
 
 
+    // ==================================================
+    // RECORRER REGISTROS
+    // ==================================================
+
     datos.forEach(function(registro) {
 
         const fila =
@@ -1394,7 +1401,7 @@ function mostrarReporte(datos) {
 
 
         // ==================================================
-        // DATOS BÁSICOS
+        // DATOS
         // ==================================================
 
         const fecha =
@@ -1456,50 +1463,6 @@ function mostrarReporte(datos) {
             );
 
 
-        // ==================================================
-        // UBICACIÓN
-        // ==================================================
-
-        const latEntrada =
-            obtenerValor(
-                registro,
-                [
-                    "latitud_entrada"
-                ]
-            );
-
-
-        const lonEntrada =
-            obtenerValor(
-                registro,
-                [
-                    "longitud_entrada"
-                ]
-            );
-
-
-        const latSalida =
-            obtenerValor(
-                registro,
-                [
-                    "latitud_salida"
-                ]
-            );
-
-
-        const lonSalida =
-            obtenerValor(
-                registro,
-                [
-                    "longitud_salida"
-                ]
-            );
-
-
-        // ==================================================
-        // ESTADO
-        // ==================================================
-
         const estado =
             obtenerValor(
                 registro,
@@ -1542,25 +1505,70 @@ function mostrarReporte(datos) {
 
 
         // ==================================================
-        // CONSTRUIR UBICACIÓN
+        // COORDENADAS
         // ==================================================
 
-        let ubicacion = "Sin ubicación";
+        const latEntrada =
+            obtenerValor(
+                registro,
+                [
+                    "latitud_entrada"
+                ]
+            );
 
+
+        const lonEntrada =
+            obtenerValor(
+                registro,
+                [
+                    "longitud_entrada"
+                ]
+            );
+
+
+        const latSalida =
+            obtenerValor(
+                registro,
+                [
+                    "latitud_salida"
+                ]
+            );
+
+
+        const lonSalida =
+            obtenerValor(
+                registro,
+                [
+                    "longitud_salida"
+                ]
+            );
+
+
+        // ==================================================
+        // UBICACIÓN
+        // ==================================================
+
+        let ubicacionHTML =
+            "Sin ubicación";
+
+
+        // UBICACIÓN DE ENTRADA
 
         if (
             latEntrada !== "" &&
             latEntrada !== null &&
+            latEntrada !== undefined &&
             lonEntrada !== "" &&
-            lonEntrada !== null
+            lonEntrada !== null &&
+            lonEntrada !== undefined
         ) {
 
-            ubicacion = `
+            ubicacionHTML = `
                 <a
                     href="https://www.google.com/maps?q=${latEntrada},${lonEntrada}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Ver ubicación de entrada"
+                    style="color:#8B0000;font-weight:bold;"
                 >
                     📍 Ver entrada
                 </a>
@@ -1569,20 +1577,36 @@ function mostrarReporte(datos) {
         }
 
 
+        // UBICACIÓN DE SALIDA
+
         if (
             latSalida !== "" &&
             latSalida !== null &&
+            latSalida !== undefined &&
             lonSalida !== "" &&
-            lonSalida !== null
+            lonSalida !== null &&
+            lonSalida !== undefined
         ) {
 
-            ubicacion += `
-                <br>
+            if (
+                ubicacionHTML !== "Sin ubicación"
+            ) {
+
+                ubicacionHTML += "<br>";
+
+            } else {
+
+                ubicacionHTML = "";
+
+            }
+
+
+            ubicacionHTML += `
                 <a
                     href="https://www.google.com/maps?q=${latSalida},${lonSalida}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Ver ubicación de salida"
+                    style="color:#8B0000;font-weight:bold;"
                 >
                     📍 Ver salida
                 </a>
@@ -1592,7 +1616,7 @@ function mostrarReporte(datos) {
 
 
         // ==================================================
-        // AGREGAR CELDAS
+        // CREAR FILA
         // ==================================================
 
         agregarCelda(
@@ -1634,7 +1658,7 @@ function mostrarReporte(datos) {
         // ⭐ UBICACIÓN
         agregarCeldaHTML(
             fila,
-            ubicacion
+            ubicacionHTML
         );
 
 
@@ -1649,17 +1673,19 @@ function mostrarReporte(datos) {
         agregarCelda(
             fila,
             tardanza === "" ||
-            tardanza === null
-                ? "0"
+            tardanza === null ||
+            tardanza === undefined
+                ? "0 min"
                 : `${tardanza} min`
         );
 
 
-        // ⭐ HORAS
+        // ⭐ HORAS TRABAJADAS
         agregarCelda(
             fila,
             horas === "" ||
-            horas === null
+            horas === null ||
+            horas === undefined
                 ? "0"
                 : horas
         );
@@ -1669,7 +1695,8 @@ function mostrarReporte(datos) {
         agregarCelda(
             fila,
             horasExtras === "" ||
-            horasExtras === null
+            horasExtras === null ||
+            horasExtras === undefined
                 ? "0"
                 : horasExtras
         );
