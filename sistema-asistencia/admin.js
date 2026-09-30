@@ -2773,8 +2773,7 @@ async function cargarHorarioDesdeExcel() {
     const archivoInput =
     document.getElementById("archivoHorarioExcel") ||
     document.getElementById("archivoExcel");
-        );
-
+        
 
     const mensajeExcel =
         document.getElementById(
