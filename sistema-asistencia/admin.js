@@ -3397,27 +3397,38 @@ document.addEventListener(
          // EXCEL HORARIOS
         // ------------------------------
 
-const btnSubirExcel =
-    document.getElementById(
-        "btnSubirExcel"
-    );
+        // ------------------------------
+// EXCEL HORARIOS
+// ------------------------------
 
+const btnSubirExcel =
+    document.getElementById("btnSubirExcel");
 
 if (btnSubirExcel) {
 
-    btnSubirExcel.addEventListener(
-        "click",
-        subirYGuardarExcel
-    );
+    if (typeof subirYGuardarExcel === "function") {
 
-    console.log(
-        "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
-    );
+        btnSubirExcel.addEventListener(
+            "click",
+            subirYGuardarExcel
+        );
+
+        console.log(
+            "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
+        );
+
+    } else {
+
+        console.error(
+            "ERROR: subirYGuardarExcel NO ESTÁ DEFINIDA"
+        );
+
+    }
 
 } else {
 
-    console.error(
-        "NO SE ENCONTRÓ EL BOTÓN btnSubirExcel"
+    console.log(
+        "BOTÓN btnSubirExcel no está en esta página"
     );
 
 }
