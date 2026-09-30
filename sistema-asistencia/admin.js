@@ -1361,22 +1361,13 @@ async function consultarReporte() {
 
 function mostrarReporte(datos) {
 
-    const lista =
-        document.getElementById("listaReporte");
+    const lista = document.getElementById("listaReporte");
 
     if (!lista) return;
 
     lista.innerHTML = "";
 
-
-    // ==================================================
-    // SIN DATOS
-    // ==================================================
-
-    if (
-        !Array.isArray(datos) ||
-        datos.length === 0
-    ) {
+    if (!Array.isArray(datos) || datos.length === 0) {
 
         lista.innerHTML = `
             <tr>
@@ -1391,7 +1382,151 @@ function mostrarReporte(datos) {
 
 
     // ==================================================
-    // RECORRER REGISTROS
+    // CREAR CELDA NORMAL
+    // ==================================================
+
+    function crearCelda(fila, contenido) {
+
+        const celda = document.createElement("td");
+
+        celda.textContent =
+            contenido === null ||
+            contenido === undefined
+                ? ""
+                : contenido;
+
+        fila.appendChild(celda);
+    }
+
+
+    // ==================================================
+    // CREAR CELDA DE UBICACIÓN
+    // ==================================================
+
+    function crearCeldaUbicacion(
+        fila,
+        latEntrada,
+        lonEntrada,
+        latSalida,
+        lonSalida
+    ) {
+
+        const celda =
+            document.createElement("td");
+
+
+        let tieneUbicacion = false;
+
+
+        // ------------------------------
+        // ENTRADA
+        // ------------------------------
+
+        if (
+            latEntrada !== null &&
+            latEntrada !== undefined &&
+            latEntrada !== "" &&
+            lonEntrada !== null &&
+            lonEntrada !== undefined &&
+            lonEntrada !== ""
+        ) {
+
+            const enlaceEntrada =
+                document.createElement("a");
+
+            enlaceEntrada.href =
+                `https://www.google.com/maps?q=${latEntrada},${lonEntrada}`;
+
+            enlaceEntrada.target = "_blank";
+
+            enlaceEntrada.rel =
+                "noopener noreferrer";
+
+            enlaceEntrada.textContent =
+                "📍 Entrada";
+
+            enlaceEntrada.style.color =
+                "#8B0000";
+
+            enlaceEntrada.style.fontWeight =
+                "bold";
+
+            enlaceEntrada.style.textDecoration =
+                "none";
+
+            celda.appendChild(
+                enlaceEntrada
+            );
+
+            tieneUbicacion = true;
+        }
+
+
+        // ------------------------------
+        // SALIDA
+        // ------------------------------
+
+        if (
+            latSalida !== null &&
+            latSalida !== undefined &&
+            latSalida !== "" &&
+            lonSalida !== null &&
+            lonSalida !== undefined &&
+            lonSalida !== ""
+        ) {
+
+            if (tieneUbicacion) {
+
+                celda.appendChild(
+                    document.createElement("br")
+                );
+            }
+
+
+            const enlaceSalida =
+                document.createElement("a");
+
+            enlaceSalida.href =
+                `https://www.google.com/maps?q=${latSalida},${lonSalida}`;
+
+            enlaceSalida.target = "_blank";
+
+            enlaceSalida.rel =
+                "noopener noreferrer";
+
+            enlaceSalida.textContent =
+                "📍 Salida";
+
+            enlaceSalida.style.color =
+                "#8B0000";
+
+            enlaceSalida.style.fontWeight =
+                "bold";
+
+            enlaceSalida.style.textDecoration =
+                "none";
+
+            celda.appendChild(
+                enlaceSalida
+            );
+
+            tieneUbicacion = true;
+        }
+
+
+        if (!tieneUbicacion) {
+
+            celda.textContent =
+                "Sin ubicación";
+        }
+
+
+        fila.appendChild(celda);
+    }
+
+
+    // ==================================================
+    // RECORRER REPORTE
     // ==================================================
 
     datos.forEach(function(registro) {
@@ -1400,26 +1535,21 @@ function mostrarReporte(datos) {
             document.createElement("tr");
 
 
-        // ==================================================
+        // ------------------------------
         // DATOS
-        // ==================================================
+        // ------------------------------
 
         const fecha =
             obtenerValor(
                 registro,
-                [
-                    "fecha",
-                    "fecha_asistencia"
-                ]
+                ["fecha", "fecha_asistencia"]
             );
 
 
         const dni =
             obtenerValor(
                 registro,
-                [
-                    "dni"
-                ]
+                ["dni"]
             );
 
 
@@ -1437,9 +1567,7 @@ function mostrarReporte(datos) {
         const area =
             obtenerValor(
                 registro,
-                [
-                    "area"
-                ]
+                ["area"]
             );
 
 
@@ -1466,9 +1594,7 @@ function mostrarReporte(datos) {
         const estado =
             obtenerValor(
                 registro,
-                [
-                    "estado"
-                ]
+                ["estado"]
             );
 
 
@@ -1504,173 +1630,97 @@ function mostrarReporte(datos) {
             );
 
 
-        // ==================================================
+        // ------------------------------
         // COORDENADAS
-        // ==================================================
+        // ------------------------------
 
         const latEntrada =
             obtenerValor(
                 registro,
-                [
-                    "latitud_entrada"
-                ]
+                ["latitud_entrada"]
             );
 
 
         const lonEntrada =
             obtenerValor(
                 registro,
-                [
-                    "longitud_entrada"
-                ]
+                ["longitud_entrada"]
             );
 
 
         const latSalida =
             obtenerValor(
                 registro,
-                [
-                    "latitud_salida"
-                ]
+                ["latitud_salida"]
             );
 
 
         const lonSalida =
             obtenerValor(
                 registro,
-                [
-                    "longitud_salida"
-                ]
+                ["longitud_salida"]
             );
 
 
         // ==================================================
-        // UBICACIÓN
+        // CREAR COLUMNAS
         // ==================================================
 
-        let ubicacionHTML =
-            "Sin ubicación";
-
-
-        // UBICACIÓN DE ENTRADA
-
-        if (
-            latEntrada !== "" &&
-            latEntrada !== null &&
-            latEntrada !== undefined &&
-            lonEntrada !== "" &&
-            lonEntrada !== null &&
-            lonEntrada !== undefined
-        ) {
-
-            ubicacionHTML = `
-                <a
-                    href="https://www.google.com/maps?q=${latEntrada},${lonEntrada}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style="color:#8B0000;font-weight:bold;"
-                >
-                    📍 Ver entrada
-                </a>
-            `;
-
-        }
-
-
-        // UBICACIÓN DE SALIDA
-
-        if (
-            latSalida !== "" &&
-            latSalida !== null &&
-            latSalida !== undefined &&
-            lonSalida !== "" &&
-            lonSalida !== null &&
-            lonSalida !== undefined
-        ) {
-
-            if (
-                ubicacionHTML !== "Sin ubicación"
-            ) {
-
-                ubicacionHTML += "<br>";
-
-            } else {
-
-                ubicacionHTML = "";
-
-            }
-
-
-            ubicacionHTML += `
-                <a
-                    href="https://www.google.com/maps?q=${latSalida},${lonSalida}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style="color:#8B0000;font-weight:bold;"
-                >
-                    📍 Ver salida
-                </a>
-            `;
-
-        }
-
-
-        // ==================================================
-        // CREAR FILA
-        // ==================================================
-
-        agregarCelda(
+        crearCelda(
             fila,
             formatearFecha(fecha)
         );
 
 
-        agregarCelda(
+        crearCelda(
             fila,
             dni
         );
 
 
-        agregarCelda(
+        crearCelda(
             fila,
             trabajador
         );
 
 
-        agregarCelda(
+        crearCelda(
             fila,
             area
         );
 
 
-        agregarCelda(
+        crearCelda(
             fila,
             formatearHora(entrada)
         );
 
 
-        agregarCelda(
+        crearCelda(
             fila,
             formatearHora(salida)
         );
 
 
         // ⭐ UBICACIÓN
-        agregarCeldaHTML(
+        crearCeldaUbicacion(
             fila,
-            ubicacionHTML
+            latEntrada,
+            lonEntrada,
+            latSalida,
+            lonSalida
         );
 
 
         // ⭐ ESTADO
-        agregarCelda(
+        crearCelda(
             fila,
             estado
         );
 
 
         // ⭐ TARDANZA
-        agregarCelda(
+        crearCelda(
             fila,
             tardanza === "" ||
             tardanza === null ||
@@ -1681,7 +1731,7 @@ function mostrarReporte(datos) {
 
 
         // ⭐ HORAS TRABAJADAS
-        agregarCelda(
+        crearCelda(
             fila,
             horas === "" ||
             horas === null ||
@@ -1692,7 +1742,7 @@ function mostrarReporte(datos) {
 
 
         // ⭐ HORAS EXTRAS
-        agregarCelda(
+        crearCelda(
             fila,
             horasExtras === "" ||
             horasExtras === null ||
@@ -1708,6 +1758,11 @@ function mostrarReporte(datos) {
 
     });
 }
+
+// ======================================================
+// MOSTRAR REPORTE
+// ======================================================
+
 
 // ======================================================
 // OBTENER VALOR
