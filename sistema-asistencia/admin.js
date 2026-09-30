@@ -2771,8 +2771,8 @@ function leerArchivoExcel(
 async function cargarHorarioDesdeExcel() {
 
     const archivoInput =
-        document.getElementById(
-            "archivoExcel"
+    document.getElementById("archivoHorarioExcel") ||
+    document.getElementById("archivoExcel");
         );
 
 
@@ -3393,11 +3393,7 @@ document.addEventListener(
 
        }
 
-         // ------------------------------
-         // EXCEL HORARIOS
-        // ------------------------------
-
-        // ------------------------------
+// ------------------------------
 // EXCEL HORARIOS
 // ------------------------------
 
@@ -3410,7 +3406,7 @@ if (btnSubirExcel) {
 
         btnSubirExcel.addEventListener(
             "click",
-            subirYGuardarExcel
+            cargarHorarioDesdeExcel
         );
 
         console.log(
