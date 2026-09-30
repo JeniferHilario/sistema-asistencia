@@ -3401,32 +3401,17 @@ const btnSubirExcel =
 
 if (btnSubirExcel) {
 
-    if (typeof subirYGuardarExcel === "function") {
-
-        btnSubirExcel.addEventListener(
-            "click",
-            cargarHorarioDesdeExcel
-        );
-
-        console.log(
-            "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
-        );
-
-    } else {
-
-        console.error(
-            "ERROR: subirYGuardarExcel NO ESTÁ DEFINIDA"
-        );
-
-    }
-
-} else {
+    btnSubirExcel.addEventListener(
+        "click",
+        cargarHorarioDesdeExcel
+    );
 
     console.log(
-        "BOTÓN btnSubirExcel no está en esta página"
+        "BOTÓN EXCEL CONECTADO CORRECTAMENTE"
     );
 
 }
+
         
         // ------------------------------
         // USUARIOS
