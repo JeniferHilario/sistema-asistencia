@@ -702,11 +702,21 @@ async function guardarTrabajador() {
 
         limpiarFormularioTrabajador();
 
-
         await cargarTrabajadores();
+await cargarListaTrabajadores();
 
-        await cargarListaTrabajadores();
+// Actualizar automáticamente el horario mostrado
+if (
+    trabajadorSelect &&
+    trabajadorSelect.value &&
+    fechaInicio &&
+    fechaInicio.value
+) {
+    limpiarHorarios();
+    await cargarHorarioExistente();
+}
 
+        
 
     } catch (error) {
 
@@ -3361,23 +3371,31 @@ async function cargarHorarioDesdeExcel() {
         // RESULTADO
         // --------------------------------------------------
 
-        if (guardados > 0) {
+      if (guardados > 0) {
 
-            mostrarMensajeExcel(
-                `Excel procesado correctamente. Horarios guardados: ${guardados}. Registros omitidos: ${omitidos}.`,
-                "green"
-            );
+    let mensajeFinal =
+        `Excel procesado correctamente. Horarios guardados: ${guardados}. Registros omitidos: ${omitidos}.`;
 
-        } else {
+    if (errores.length > 0) {
+        mensajeFinal +=
+            `<br><br><strong>Registros omitidos:</strong><br>` +
+            errores.slice(0, 10).join("<br>");
+    }
 
-            mostrarMensajeExcel(
-                `No se guardaron horarios. Registros omitidos: ${omitidos}. ${
-                    errores.slice(0, 3).join(" | ")
-                }`,
-                "red"
-            );
-        }
+    mostrarMensajeExcel(
+        mensajeFinal,
+        omitidos === 0 ? "green" : "red"
+    );
 
+} else {
+
+    mostrarMensajeExcel(
+        `No se guardaron horarios. Registros omitidos: ${omitidos}.<br><br>` +
+        `<strong>Detalle:</strong><br>` +
+        errores.slice(0, 10).join("<br>"),
+        "red"
+    );
+}
 
         console.log(
             "RESULTADO IMPORTACIÓN EXCEL",
@@ -3442,7 +3460,7 @@ function mostrarMensajeExcel(
     if (!elemento) return;
 
 
-    elemento.textContent =
+    elemento.innerHTML =
         texto;
 
 
