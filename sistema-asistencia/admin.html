@@ -1258,9 +1258,9 @@
     }
 
     async function cargarHorarioDesdeExcel() {
-        const archivoInput = document.getElementById("archivoHorarioExcel");
-        const boton = document.getElementById("btnCargarExcel");
-        const resultado = document.getElementById("resultadoExcelHorario");
+           const archivoInput = document.getElementById("archivoExcel");
+           const boton = document.getElementById("btnSubirExcel");
+           const resultado = document.getElementById("mensajeExcel");
 
         if (!archivoInput?.files?.[0]) {
             if (resultado) {
