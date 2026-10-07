@@ -477,20 +477,248 @@ function cancelarTrabajador() {
     }
 }
 
-
 // ======================================================
 // EDITAR TRABAJADOR
 // ======================================================
 
-function editarTrabajador(
-    id,
-    dni,
-    nombre,
-    apellidos,
-    area,
-    cargo,
-    activo
-) {
+async function editarTrabajador(id) {
+
+    if (!formularioTrabajador) return;
+
+    try {
+
+        console.log(
+            "Buscando trabajador para editar:",
+            id
+        );
+
+
+        // ==============================================
+        // OBTENER TODOS LOS TRABAJADORES
+        // ==============================================
+
+        const respuesta =
+            await llamarSupabase(
+                "listar_todos_trabajadores"
+            );
+
+
+        // ==============================================
+        // NORMALIZAR RESPUESTA
+        // ==============================================
+
+        let trabajadores = [];
+
+
+        if (Array.isArray(respuesta)) {
+
+            trabajadores = respuesta;
+
+        } else if (
+            respuesta &&
+            Array.isArray(respuesta.trabajadores)
+        ) {
+
+            trabajadores =
+                respuesta.trabajadores;
+
+        } else if (
+            respuesta &&
+            Array.isArray(respuesta.data)
+        ) {
+
+            trabajadores =
+                respuesta.data;
+
+        } else if (
+            respuesta &&
+            Array.isArray(respuesta.resultado)
+        ) {
+
+            trabajadores =
+                respuesta.resultado;
+        }
+
+
+        // ==============================================
+        // BUSCAR TRABAJADOR POR ID
+        // ==============================================
+
+        const trabajador =
+            trabajadores.find(
+                function(item) {
+
+                    return String(item.id) ===
+                           String(id);
+
+                }
+            );
+
+
+        if (!trabajador) {
+
+            console.error(
+                "No se encontró el trabajador:",
+                id
+            );
+
+            mostrarMensajeTrabajador(
+                "No se encontró el trabajador.",
+                "red"
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "TRABAJADOR ENCONTRADO:",
+            trabajador
+        );
+
+
+        // ==============================================
+        // GUARDAR ID PARA ACTUALIZAR
+        // ==============================================
+
+        formularioTrabajador.dataset.id =
+            trabajador.id;
+
+
+        // ==============================================
+        // CAMPOS DEL FORMULARIO
+        // ==============================================
+
+        const campoDni =
+            document.getElementById(
+                "nuevoDni"
+            );
+
+        const campoNombre =
+            document.getElementById(
+                "nuevoNombre"
+            );
+
+        const campoApellidos =
+            document.getElementById(
+                "nuevoApellidos"
+            );
+
+        const campoArea =
+            document.getElementById(
+                "nuevoArea"
+            );
+
+        const campoCargo =
+            document.getElementById(
+                "nuevoCargo"
+            );
+
+        const campoActivo =
+            document.getElementById(
+                "nuevoActivo"
+            );
+
+
+        // ==============================================
+        // CARGAR DATOS
+        // ==============================================
+
+        if (campoDni) {
+
+            campoDni.value =
+                trabajador.dni || "";
+        }
+
+
+        if (campoNombre) {
+
+            campoNombre.value =
+                trabajador.nombre || "";
+        }
+
+
+        if (campoApellidos) {
+
+            campoApellidos.value =
+                trabajador.apellidos || "";
+        }
+
+
+        if (campoArea) {
+
+            campoArea.value =
+                trabajador.area || "";
+        }
+
+
+        if (campoCargo) {
+
+            campoCargo.value =
+                trabajador.cargo || "";
+        }
+
+
+        if (campoActivo) {
+
+            campoActivo.value =
+                trabajador.activo === false
+                    ? "false"
+                    : "true";
+        }
+
+
+        // ==============================================
+        // CAMBIAR TÍTULO
+        // ==============================================
+
+        if (tituloFormulario) {
+
+            tituloFormulario.textContent =
+                "Editar trabajador";
+        }
+
+
+        // ==============================================
+        // CAMBIAR BOTÓN
+        // ==============================================
+
+        if (btnGuardarTrabajador) {
+
+            btnGuardarTrabajador.textContent =
+                "ACTUALIZAR TRABAJADOR";
+        }
+
+
+        // ==============================================
+        // MOSTRAR FORMULARIO
+        // ==============================================
+
+        formularioTrabajador.classList.add(
+            "activo"
+        );
+
+
+        formularioTrabajador.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando trabajador para editar:",
+            error
+        );
+
+
+        mostrarMensajeTrabajador(
+            "No se pudo cargar la información del trabajador.",
+            "red"
+        );
+    }
+}
 
     if (!formularioTrabajador) return;
 
