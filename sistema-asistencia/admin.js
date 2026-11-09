@@ -1106,165 +1106,115 @@ function mostrarMensajeHorario(
 
 async function cargarHorarioExistente() {
 
-    if (!trabajadorSelect || !fechaInicio) {
-        return;
-    }
+    if (!trabajadorSelect || !fechaInicio) return;
 
-    const trabajadorId =
-        trabajadorSelect.value;
-
-    const fechaBase =
-        fechaInicio.value;
+    const trabajadorId = trabajadorSelect.value;
+    const fechaBase = fechaInicio.value;
 
     if (!trabajadorId || !fechaBase) {
+        limpiarHorarios();
         return;
     }
 
     try {
 
-        const resultado =
-            await llamarSupabase(
-                "obtener_horario_semanal",
-                {
-                    p_trabajador_id:
-                        trabajadorId,
+        limpiarHorarios();
 
-                    p_fecha_inicio:
-                        fechaBase
-                }
-            );
-
-        console.log(
-            "HORARIO RECIBIDO:",
-            resultado
+        // CONSULTAR LA SEMANA SELECCIONADA
+        const resultadoActual = await llamarSupabase(
+            "obtener_horario_semanal",
+            {
+                p_trabajador_id: trabajadorId,
+                p_fecha_inicio: fechaBase
+            }
         );
 
-        if (
-            !resultado ||
-            resultado.ok !== true ||
-            !Array.isArray(resultado.horarios)
-        ) {
-            console.log(
-                "No se encontraron horarios."
+        console.log("HORARIO SEMANA ACTUAL:", resultadoActual);
+
+        // VERIFICAR SI LA SEMANA ACTUAL TIENE HORARIOS
+        const tieneHorarioActual =
+            resultadoActual?.ok === true &&
+            Array.isArray(resultadoActual.horarios) &&
+            resultadoActual.horarios.some(h =>
+                h.descanso === true ||
+                h.hora_entrada ||
+                h.hora_salida
+            );
+
+        if (tieneHorarioActual) {
+
+            colocarHorariosEnFormulario(resultadoActual.horarios);
+
+            console.log("Se cargó el horario de la semana seleccionada.");
+
+            mostrarMensajeHorario(
+                "✓ Se cargaron los horarios de esta semana.",
+                "green"
             );
 
             return;
         }
 
+        // SI NO EXISTEN HORARIOS, CALCULAR LA SEMANA ANTERIOR
+        const partes = fechaBase.split("-").map(Number);
 
-        // ==================================================
-        // NOMBRES DE LOS DÍAS
-        // ==================================================
+        const fechaAnterior = new Date(
+            Date.UTC(partes[0], partes[1] - 1, partes[2] - 7)
+        );
 
-        const dias = [
-            "lunes",
-            "martes",
-            "miercoles",
-            "jueves",
-            "viernes",
-            "sabado",
-            "domingo"
-        ];
+        const anio = fechaAnterior.getUTCFullYear();
+        const mes = String(fechaAnterior.getUTCMonth() + 1).padStart(2, "0");
+        const dia = String(fechaAnterior.getUTCDate()).padStart(2, "0");
 
+        const fechaSemanaAnterior = `${anio}-${mes}-${dia}`;
 
-        // ==================================================
-        // LIMPIAR TODOS LOS CAMPOS
-        // ==================================================
-
-        limpiarHorarios();
-
-
-        // ==================================================
-        // COLOCAR CADA HORARIO
-        // ==================================================
-
-        resultado.horarios.forEach(
-            function(horario) {
-
-                const numeroDia =
-                    Number(horario.dia);
-
-                const nombreDia =
-                    dias[numeroDia];
-
-
-                if (!nombreDia) {
-                    return;
-                }
-
-
-                const entrada =
-                    document.getElementById(
-                        `${nombreDia}Entrada`
-                    );
-
-                const salida =
-                    document.getElementById(
-                        `${nombreDia}Salida`
-                    );
-
-                const descanso =
-                    document.getElementById(
-                        `${nombreDia}Descanso`
-                    );
-
-
-                // ==========================================
-                // ENTRADA
-                // ==========================================
-
-                if (entrada) {
-
-                    entrada.value =
-                        horario.hora_entrada
-                            ? horario.hora_entrada.substring(
-                                0,
-                                5
-                            )
-                            : "";
-                }
-
-
-                // ==========================================
-                // SALIDA
-                // ==========================================
-
-                if (salida) {
-
-                    salida.value =
-                        horario.hora_salida
-                            ? horario.hora_salida.substring(
-                                0,
-                                5
-                            )
-                            : "";
-                }
-
-
-                // ==========================================
-                // DESCANSO
-                // ==========================================
-
-                if (descanso) {
-
-                    descanso.checked =
-                        horario.descanso === true;
-                }
-
+        // CONSULTAR HORARIOS DE LA SEMANA ANTERIOR
+        const resultadoAnterior = await llamarSupabase(
+            "obtener_horario_semanal",
+            {
+                p_trabajador_id: trabajadorId,
+                p_fecha_inicio: fechaSemanaAnterior
             }
         );
 
+        console.log("HORARIO SEMANA ANTERIOR:", resultadoAnterior);
 
-        console.log(
-            "HORARIO CARGADO CORRECTAMENTE"
-        );
+        const tieneHorarioAnterior =
+            resultadoAnterior?.ok === true &&
+            Array.isArray(resultadoAnterior.horarios) &&
+            resultadoAnterior.horarios.some(h =>
+                h.descanso === true ||
+                h.hora_entrada ||
+                h.hora_salida
+            );
+
+        if (tieneHorarioAnterior) {
+
+            // COPIAR LOS HORARIOS ANTERIORES COMO BASE
+            colocarHorariosEnFormulario(resultadoAnterior.horarios);
+
+            mostrarMensajeHorario(
+                "✓ Se copiaron los horarios de la semana anterior. Puede modificarlos y guardar la nueva semana.",
+                "green"
+            );
+
+            console.log("Horario anterior cargado como plantilla.");
+
+        } else {
+
+            limpiarHorarios();
+
+            mostrarMensajeHorario(
+                "No hay horarios registrados para esta semana ni para la anterior.",
+                "red"
+            );
+        }
 
     } catch (error) {
 
-        console.error(
-            "Error cargando horario:",
-            error
-        );
+        console.error("Error cargando horario:", error);
+
+        limpiarHorarios();
 
         mostrarMensajeHorario(
             "No se pudo cargar el horario.",
@@ -1272,7 +1222,52 @@ async function cargarHorarioExistente() {
         );
     }
 }
-   
+
+
+// COLOCAR LOS HORARIOS EN LOS CAMPOS DEL FORMULARIO
+function colocarHorariosEnFormulario(horarios) {
+
+    const dias = [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes",
+        "sabado",
+        "domingo"
+    ];
+
+    limpiarHorarios();
+
+    horarios.forEach(function(horario) {
+
+        const numeroDia = Number(horario.dia);
+        const nombreDia = dias[numeroDia];
+
+        if (!nombreDia) return;
+
+        const entrada = document.getElementById(`${nombreDia}Entrada`);
+        const salida = document.getElementById(`${nombreDia}Salida`);
+        const descanso = document.getElementById(`${nombreDia}Descanso`);
+
+        if (entrada) {
+            entrada.value = horario.hora_entrada
+                ? horario.hora_entrada.substring(0, 5)
+                : "";
+        }
+
+        if (salida) {
+            salida.value = horario.hora_salida
+                ? horario.hora_salida.substring(0, 5)
+                : "";
+        }
+
+        if (descanso) {
+            descanso.checked = horario.descanso === true;
+        }
+
+    });
+}
 // ======================================================
 // LIMPIAR HORARIOS
 // ======================================================
