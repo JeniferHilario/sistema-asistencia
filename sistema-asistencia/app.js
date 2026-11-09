@@ -409,57 +409,66 @@ async function registrarMarcacion(tipo) {
 
             return;
         }
-// ==================================
-// ENTRADA
-// ==================================
-
-if (tipo === "ENTRADA") {
+        // ==================================
+       // ENTRADA
+       // ==================================
+        if (tipo === "ENTRADA") {
 
     const minutos = Number(resultado.minutos_tardanza || 0);
+
+    mensaje.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        overflow: auto;
+    `;
 
     if (minutos > 0) {
 
         mensaje.innerHTML = `
             <div style="
+                width: 100%;
+                max-width: 900px;
+                min-height: 450px;
+                padding: 35px;
+                box-sizing: border-box;
+                border: 5px solid #dc3545;
+                border-radius: 25px;
                 background: #fff0f0;
-                border: 4px solid #dc3545;
-                border-radius: 20px;
-                padding: 30px 15px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
                 text-align: center;
-                margin-top: 20px;
                 color: #b00000;
             ">
 
-                <div style="font-size: 85px;">
-                    😔
-                </div>
+                <div style="font-size:100px;">😔</div>
 
-                <h1 style="
-                    font-size: 38px;
-                    margin: 10px 0;
-                    font-weight: bold;
-                ">
+                <h1 style="font-size:42px;">
                     ¡LLEGASTE TARDE!
                 </h1>
 
-                <div style="
-                    font-size: 45px;
-                    font-weight: bold;
-                    margin: 15px 0;
-                ">
+                <div style="font-size:55px;font-weight:bold;">
                     ${minutos} MINUTOS
                 </div>
 
-                <h2 style="font-size: 28px;">
+                <h2 style="font-size:30px;">
                     ENTRADA REGISTRADA
                 </h2>
 
-                <p style="
-                    font-size: 22px;
-                    color: #444;
-                ">
-                    ¡No te desanimes! Mañana tienes
-                    una nueva oportunidad para mejorar. 💪
+                <p style="font-size:22px;color:#333;">
+                    ¡No te desanimes! Mañana tienes una nueva
+                    oportunidad para mejorar. 💪
                 </p>
 
             </div>
@@ -469,35 +478,33 @@ if (tipo === "ENTRADA") {
 
         mensaje.innerHTML = `
             <div style="
+                width: 100%;
+                max-width: 900px;
+                min-height: 450px;
+                padding: 35px;
+                box-sizing: border-box;
+                border: 5px solid #198754;
+                border-radius: 25px;
                 background: #e9f9ef;
-                border: 4px solid #198754;
-                border-radius: 20px;
-                padding: 30px 15px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
                 text-align: center;
-                margin-top: 20px;
                 color: #146c43;
             ">
 
-                <div style="font-size: 85px;">
-                    😊
-                </div>
+                <div style="font-size:100px;">😊</div>
 
-                <h1 style="
-                    font-size: 38px;
-                    margin: 10px 0;
-                    font-weight: bold;
-                ">
+                <h1 style="font-size:42px;">
                     ¡LLEGASTE PUNTUAL!
                 </h1>
 
-                <h2 style="font-size: 28px;">
+                <h2 style="font-size:30px;">
                     ENTRADA REGISTRADA
                 </h2>
 
-                <p style="
-                    font-size: 22px;
-                    color: #444;
-                ">
+                <p style="font-size:22px;color:#333;">
                     ¡Excelente! Sigue así, tu puntualidad
                     hace la diferencia. 💚
                 </p>
@@ -506,7 +513,6 @@ if (tipo === "ENTRADA") {
         `;
     }
 }
-
         // ==================================
         // SALIDA
         // ==================================
@@ -546,30 +552,17 @@ if (tipo === "ENTRADA") {
         // LIMPIAR AUTOMÁTICAMENTE
         // DESPUÉS DE 6 SEGUNDOS
         // ==================================
+setTimeout(function () {
 
-        setTimeout(
-            function () {
+    limpiarDni();
 
-                limpiarDni();
+    mensaje.innerHTML = "";
+    mensaje.style.cssText = "";
 
-            },
-            6000
-        );
+    document.querySelector(".zona-marcacion").style.display = "";
+    document.querySelector(".botones").style.display = "";
 
-
-    } catch (error) {
-
-        console.error(
-            "Error registrando:",
-            error
-        );
-
-
-        mensaje.innerHTML =
-            "No se pudo obtener la ubicación. Active el GPS.";
-    }
-}
-
+}, 6000);
 
 // ==========================================
 // BOTÓN ENTRADA
