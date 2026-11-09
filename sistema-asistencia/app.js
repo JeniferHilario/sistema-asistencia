@@ -411,28 +411,103 @@ async function registrarMarcacion(tipo) {
         }
 
 
-        // ==================================
-        // ENTRADA
-        // ==================================
+       // ==================================
+// ENTRADA
+// ==================================
 
-        if (tipo === "ENTRADA") {
+if (tipo === "ENTRADA") {
 
-            if (
-                resultado.minutos_tardanza &&
-                resultado.minutos_tardanza > 0
-            ) {
+    const minutos = Number(resultado.minutos_tardanza || 0);
 
-                mensaje.innerHTML =
-                    `Entrada registrada. Tardanza: ${resultado.minutos_tardanza} minutos.`;
+    if (minutos > 0) {
 
-            } else {
+        mensaje.innerHTML = `
+            <div style="
+                background: #fff0f0;
+                border: 4px solid #dc3545;
+                border-radius: 20px;
+                padding: 30px 15px;
+                text-align: center;
+                margin-top: 20px;
+                color: #b00000;
+            ">
 
-                mensaje.innerHTML =
-                    "Entrada registrada correctamente.";
-            }
-        }
+                <div style="font-size: 85px;">
+                    😔
+                </div>
 
+                <h1 style="
+                    font-size: 38px;
+                    margin: 10px 0;
+                    font-weight: bold;
+                ">
+                    ¡LLEGASTE TARDE!
+                </h1>
 
+                <div style="
+                    font-size: 45px;
+                    font-weight: bold;
+                    margin: 15px 0;
+                ">
+                    ${minutos} MINUTOS
+                </div>
+
+                <h2 style="font-size: 28px;">
+                    ENTRADA REGISTRADA
+                </h2>
+
+                <p style="
+                    font-size: 22px;
+                    color: #444;
+                ">
+                    ¡No te desanimes! Mañana tienes
+                    una nueva oportunidad para mejorar. 💪
+                </p>
+
+            </div>
+        `;
+
+    } else {
+
+        mensaje.innerHTML = `
+            <div style="
+                background: #e9f9ef;
+                border: 4px solid #198754;
+                border-radius: 20px;
+                padding: 30px 15px;
+                text-align: center;
+                margin-top: 20px;
+                color: #146c43;
+            ">
+
+                <div style="font-size: 85px;">
+                    😊
+                </div>
+
+                <h1 style="
+                    font-size: 38px;
+                    margin: 10px 0;
+                    font-weight: bold;
+                ">
+                    ¡LLEGASTE PUNTUAL!
+                </h1>
+
+                <h2 style="font-size: 28px;">
+                    ENTRADA REGISTRADA
+                </h2>
+
+                <p style="
+                    font-size: 22px;
+                    color: #444;
+                ">
+                    ¡Excelente! Sigue así, tu puntualidad
+                    hace la diferencia. 💚
+                </p>
+
+            </div>
+        `;
+    }
+}
         // ==================================
         // SALIDA
         // ==================================
