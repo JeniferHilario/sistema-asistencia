@@ -961,48 +961,37 @@ function limpiarFormularioTrabajador() {
     }
 }
 
-
 // ======================================================
-// GUARDAR HORARIO
+// GUARDAR HORARIO - ACTUALIZACIÓN AUTOMÁTICA
 // ======================================================
 
 async function guardarHorario() {
 
-    if (!trabajadorSelect || !fechaInicio) {
-        return;
-    }
+    if (!trabajadorSelect || !fechaInicio) return;
 
-
-    const trabajadorId =
-        trabajadorSelect.value;
-
-    const fechaBase =
-        fechaInicio.value;
-
+    const trabajadorId = trabajadorSelect.value;
+    const fechaBase = fechaInicio.value;
 
     if (!trabajadorId) {
-
-        mostrarMensajeHorario(
-            "Seleccione un trabajador.",
-            "red"
-        );
-
+        mostrarMensajeHorario("Seleccione un trabajador.", "red");
         return;
     }
-
 
     if (!fechaBase) {
-
-        mostrarMensajeHorario(
-            "Seleccione la fecha de inicio.",
-            "red"
-        );
-
+        mostrarMensajeHorario("Seleccione la fecha de inicio.", "red");
         return;
     }
 
+    const textoOriginal = btnGuardar
+        ? btnGuardar.textContent
+        : "";
 
     try {
+
+        if (btnGuardar) {
+            btnGuardar.disabled = true;
+            btnGuardar.textContent = "GUARDANDO...";
+        }
 
         const dias = [
             "lunes",
@@ -1014,115 +1003,69 @@ async function guardarHorario() {
             "domingo"
         ];
 
-
         const horarios = [];
-
 
         dias.forEach(function(dia, indice) {
 
-            const entrada =
-                document.getElementById(
-                    `${dia}Entrada`
-                );
+            const entrada = document.getElementById(`${dia}Entrada`);
+            const salida = document.getElementById(`${dia}Salida`);
+            const descanso = document.getElementById(`${dia}Descanso`);
 
-            const salida =
-                document.getElementById(
-                    `${dia}Salida`
-                );
+            const horaEntrada = entrada?.value || "";
+            const horaSalida = salida?.value || "";
 
-            const descanso =
-                document.getElementById(
-                    `${dia}Descanso`
-                );
-
-
-            const horaEntrada =
-                entrada?.value || "";
-
-            const horaSalida =
-                salida?.value || "";
-
-
-            const tieneHorario =
-                horaEntrada !== "" &&
-                horaSalida !== "";
-
-
-            const esDescanso =
-                !tieneHorario &&
-                descanso?.checked === true;
-
+            const esDescanso = descanso?.checked === true;
 
             horarios.push({
-
                 dia: indice,
-
-                hora_entrada:
-                    esDescanso
-                        ? ""
-                        : horaEntrada,
-
-                hora_salida:
-                    esDescanso
-                        ? ""
-                        : horaSalida,
-
-                descanso:
-                    esDescanso
+                hora_entrada: esDescanso ? "" : horaEntrada,
+                hora_salida: esDescanso ? "" : horaSalida,
+                descanso: esDescanso
             });
 
         });
 
+        const resultado = await llamarSupabase(
+            "guardar_horario_semanal",
+            {
+                p_trabajador_id: trabajadorId,
+                p_fecha_inicio: fechaBase,
+                p_horarios: horarios
+            }
+        );
 
-        const resultado =
-            await llamarSupabase(
-                "guardar_horario_semanal",
-                {
-                    p_trabajador_id:
-                        trabajadorId,
-
-                    p_fecha_inicio:
-                        fechaBase,
-
-                    p_horarios:
-                        horarios
-                }
-            );
-
-
-        if (
-            !resultado ||
-            resultado.ok !== true
-        ) {
-
+        if (!resultado || resultado.ok !== true) {
             throw new Error(
-                resultado?.mensaje ||
-                "No se pudo guardar el horario."
+                resultado?.mensaje || "No se pudo guardar el horario."
             );
         }
 
+        // VOLVER A CONSULTAR EL HORARIO GUARDADO
+        await cargarHorarioExistente();
 
         mostrarMensajeHorario(
-            "Horario semanal guardado correctamente.",
+            "✓ Horario guardado y actualizado correctamente.",
             "green"
         );
 
-
     } catch (error) {
 
-        console.error(
-            "Error guardando horario:",
-            error
-        );
-
+        console.error("Error guardando horario:", error);
 
         mostrarMensajeHorario(
-            "No se pudo guardar el horario.",
+            error.message || "No se pudo guardar el horario.",
             "red"
         );
+
+    } finally {
+
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.textContent = textoOriginal || "✓ GUARDAR HORARIO";
+        }
+
     }
 }
-
 
 // ======================================================
 // MENSAJE HORARIO
