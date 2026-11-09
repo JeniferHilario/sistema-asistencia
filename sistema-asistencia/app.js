@@ -546,12 +546,11 @@ async function registrarMarcacion(tipo) {
             mensaje.innerHTML =
                 texto;
         }
+// ==================================
+// LIMPIAR AUTOMÁTICAMENTE
+// DESPUÉS DE 6 SEGUNDOS
+// ==================================
 
-
-        // ==================================
-        // LIMPIAR AUTOMÁTICAMENTE
-        // DESPUÉS DE 6 SEGUNDOS
-        // ==================================
 setTimeout(function () {
 
     limpiarDni();
@@ -559,11 +558,34 @@ setTimeout(function () {
     mensaje.innerHTML = "";
     mensaje.style.cssText = "";
 
-    document.querySelector(".zona-marcacion").style.display = "";
-    document.querySelector(".botones").style.display = "";
+    const zonaMarcacion = document.querySelector(".zona-marcacion");
+    const botonesMarcacion = document.querySelector(".botones");
+
+    if (zonaMarcacion) {
+        zonaMarcacion.style.display = "";
+    }
+
+    if (botonesMarcacion) {
+        botonesMarcacion.style.display = "";
+    }
 
 }, 6000);
 
+
+} catch (error) {
+
+    console.error(
+        "Error registrando:",
+        error
+    );
+
+    mensaje.innerHTML =
+        "No se pudo obtener la ubicación. Active el GPS.";
+
+}
+
+}
+        
 // ==========================================
 // BOTÓN ENTRADA
 // ==========================================
