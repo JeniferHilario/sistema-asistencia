@@ -1482,18 +1482,22 @@ async function mostrarTareoMensual(registros) {
     }
 
     // Obtener la lista de trabajadores
-    const { data: trabajadores, error } =
-        await supabase.rpc("listar_todos_trabajadores");
+    let trabajadores;
 
-    if (error) {
-        console.error("Error al cargar trabajadores:", error);
-        cuerpo.innerHTML = `
-            <tr>
-                <td colspan="40">No se pudo cargar la lista de trabajadores.</td>
-            </tr>`;
-        return;
-    }
+try {
+    trabajadores = await llamarSupabase("listar_todos_trabajadores");
+} catch (error) {
+    console.error("Error al cargar trabajadores del tareo:", error);
 
+    cuerpo.innerHTML = `
+        <tr>
+            <td colspan="40">
+                No se pudo cargar la lista de trabajadores.
+            </td>
+        </tr>`;
+
+    return;
+}
     // Generar los días del periodo seleccionado
     const dias = [];
     let fechaActual = new Date(`${desde}T00:00:00`);
