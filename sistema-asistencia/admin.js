@@ -1533,7 +1533,7 @@ try {
             ${dias.map(dia => `
                 <th>${dia.getDate()}</th>
             `).join("")}
-            <th>Total 1</th>
+            <th>Total A</th>
             <th>Total D</th>
             <th>Total F</th>
         </tr>
