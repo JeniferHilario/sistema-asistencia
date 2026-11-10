@@ -1415,13 +1415,11 @@ async function consultarReporte() {
         mostrarReporte(
             resultado
         );
-        await mostrarTareoMensual(resultado);
-
+      
         mostrarMensajeReporte(
             `Reporte generado correctamente. Registros encontrados: ${resultado.length}`,
             "green"
         );
-
 
     } catch (error) {
 
@@ -1462,8 +1460,8 @@ async function mostrarTareoMensual(registros) {
     const encabezado = document.getElementById("encabezadoTareo");
     const cuerpo = document.getElementById("listaTareo");
 
-    const desde = document.getElementById("fechaReporteDesde").value;
-    const hasta = document.getElementById("fechaReporteHasta").value;
+   const desde = document.getElementById("fechaTareoDesde").value;
+   const hasta = document.getElementById("fechaTareoHasta").value;
 
     if (!desde || !hasta) {
         cuerpo.innerHTML = `
@@ -1573,9 +1571,24 @@ try {
             estado = "1";
         }
 
-        if (estado === "DESCANSO") estado = "D";
-        if (estado === "INASISTENCIA") estado = "F";
+        // Homologar los estados para el tareo
+if (
+    ["TARDANZA", "PUNTUAL", "SIN SALIDA"].includes(estado)
+) {
+    estado = "1";
+}
 
+if (
+    ["DESCANSO", "DESCANSO SEMANAL"].includes(estado)
+) {
+    estado = "D";
+}
+
+if (
+    ["INASISTENCIA", "FALTA", "INASISTENTE"].includes(estado)
+) {
+    estado = "F";
+}
         if (!asistencias[dni]) {
             asistencias[dni] = {};
         }
@@ -1633,6 +1646,53 @@ try {
                     No se encontraron trabajadores.
                 </td>
             </tr>`;
+    }
+}
+
+// ======================================================
+// CONSULTA INDEPENDIENTE DEL TAREO MENSUAL
+// ======================================================
+
+async function consultarTareo() {
+
+    const desde = document.getElementById("fechaTareoDesde").value;
+    const hasta = document.getElementById("fechaTareoHasta").value;
+    const cuerpo = document.getElementById("listaTareo");
+    const mensaje = document.getElementById("mensajeTareo");
+
+    if (!desde || !hasta) {
+        mensaje.textContent = "Selecciona las fechas del tareo.";
+        return;
+    }
+
+    if (desde > hasta) {
+        mensaje.textContent = "La fecha inicial no puede ser mayor que la fecha final.";
+        return;
+    }
+
+    try {
+        mensaje.textContent = "Consultando tareo...";
+
+        const registros = await llamarSupabase("obtener_reporte_asistencia", {
+            p_fecha_inicio: desde,
+            p_fecha_fin: hasta
+        });
+
+        if (!Array.isArray(registros)) {
+            throw new Error("La respuesta no tiene el formato esperado.");
+        }
+
+        await mostrarTareoMensual(registros);
+
+        mensaje.textContent = "Tareo generado correctamente.";
+
+    } catch (error) {
+        console.error("Error al consultar tareo:", error);
+        cuerpo.innerHTML = `
+            <tr>
+                <td colspan="40">No se pudo generar el tareo.</td>
+            </tr>`;
+        mensaje.textContent = "Error al consultar el tareo.";
     }
 }
 
