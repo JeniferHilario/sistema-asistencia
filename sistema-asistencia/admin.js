@@ -1603,9 +1603,15 @@ if (
 
             const dni = String(trabajador.dni || "").trim();
 
-            const apellidos = String(trabajador.nombre || "").trim();
-            const nombres = String(trabajador.apellidos || "").replace(/,+\s*$/, "").trim();
-            const nombre = `${apellidos}, ${nombres}`;
+            const apellidos = String(trabajador.nombre || "")
+    .replace(/,+/g, "")
+    .trim();
+
+const nombres = String(trabajador.apellidos || "")
+    .replace(/,+/g, "")
+    .trim();
+
+const nombre = `${apellidos}, ${nombres}`;
 
             let totalUno = 0;
             let totalD = 0;
