@@ -1698,6 +1698,77 @@ async function consultarTareo() {
     }
 }
 
+
+// ======================================================
+// DESCARGAR TAREO MENSUAL EN EXCEL
+// ======================================================
+
+function descargarTareoExcel() {
+
+    const tabla = document.getElementById("tablaTareo");
+    const cuerpo = document.getElementById("listaTareo");
+
+    if (!tabla || !cuerpo || !cuerpo.querySelector("tr")) {
+        alert("Primero debes consultar el tareo.");
+        return;
+    }
+
+    const encabezados = Array.from(
+        tabla.querySelectorAll("thead th")
+    );
+
+    const filas = Array.from(
+        cuerpo.querySelectorAll("tr")
+    );
+
+    if (!encabezados.length || !filas.length ||
+        filas[0].querySelectorAll("td").length < 3) {
+        alert("No hay información del tareo para descargar.");
+        return;
+    }
+
+    const limpiar = texto =>
+        String(texto || "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .replace(/"/g, '""');
+
+    const datos = [];
+
+    datos.push(
+        encabezados.map(th => `"${limpiar(th.textContent)}"`).join(";")
+    );
+
+    filas.forEach(fila => {
+        const celdas = Array.from(fila.querySelectorAll("td"));
+
+        if (celdas.length === encabezados.length) {
+            datos.push(
+                celdas.map(td => `"${limpiar(td.textContent)}"`).join(";")
+            );
+        }
+    });
+
+    const contenido = "\uFEFF" + datos.join("\r\n");
+
+    const archivo = new Blob(
+        [contenido],
+        { type: "text/csv;charset=utf-8;" }
+    );
+
+    const enlace = document.createElement("a");
+    const url = URL.createObjectURL(archivo);
+
+    enlace.href = url;
+    enlace.download = "TAREO_MENSUAL.csv";
+
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+
+    URL.revokeObjectURL(url);
+}
+
 // ======================================================
 // MOSTRAR REPORTE
 // ======================================================
