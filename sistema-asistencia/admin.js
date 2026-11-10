@@ -1603,12 +1603,18 @@ if (
 
             const dni = String(trabajador.dni || "").trim();
 
-           const nombre = [
-    trabajador.nombre,
-    trabajador.apellidos
-].filter(Boolean).join(", ") ||
-  trabajador.nombre_completo ||
-  "Sin nombre";
+            const apellidos = String(trabajador.apellidos || "")
+    .replace(/,+\s*$/, "")
+    .trim();
+
+const nombres = String(trabajador.nombre || "")
+    .trim();
+
+const nombre = [apellidos, nombres]
+    .filter(Boolean)
+    .join(", ") ||
+    trabajador.nombre_completo ||
+    "Sin nombre";
 
             let totalUno = 0;
             let totalD = 0;
