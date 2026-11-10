@@ -904,12 +904,42 @@
 <!-- ========================================= -->
 <!-- TAREO MENSUAL - NUEVA VISTA -->
 <!-- ========================================= -->
-
 <h2 style="margin-top:35px;">📅 Tareo mensual</h2>
 
 <p>
-    Vista consolidada de asistencia por trabajador y día.
+    Consulta independiente de asistencia por trabajador y día.
 </p>
+
+<div class="grid-formulario">
+
+    <div class="campo">
+        <label>Desde - Tareo</label>
+        <input type="date" id="fechaTareoDesde">
+    </div>
+
+    <div class="campo">
+        <label>Hasta - Tareo</label>
+        <input type="date" id="fechaTareoHasta">
+    </div>
+
+</div>
+
+<br>
+
+<div class="acciones">
+
+    <button
+        class="btn-guardar"
+        type="button"
+        onclick="consultarTareo()">
+
+        🔎 CONSULTAR TAREO
+
+    </button>
+
+</div>
+
+<div id="mensajeTareo"></div>
 
 <div class="tabla-contenedor">
 
@@ -918,14 +948,14 @@
         <thead id="encabezadoTareo">
             <tr>
                 <th>Trabajador</th>
-                <th>Seleccione un rango y consulte</th>
+                <th>Seleccione fechas y consulte</th>
             </tr>
         </thead>
 
         <tbody id="listaTareo">
             <tr>
                 <td colspan="2">
-                    El tareo aparecerá aquí al consultar el reporte.
+                    El tareo aparecerá aquí.
                 </td>
             </tr>
         </tbody>
@@ -933,6 +963,7 @@
     </table>
 
 </div>
+
     <!-- ========================================= -->
     <!-- USUARIOS -->
     <!-- ========================================= -->
