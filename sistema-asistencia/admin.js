@@ -1608,13 +1608,11 @@ if (
     .trim();
 
 const nombres = String(trabajador.nombre || "")
+    .replace(/,+\s*$/, "")
     .trim();
 
-const nombre = [apellidos, nombres]
-    .filter(Boolean)
-    .join(", ") ||
-    trabajador.nombre_completo ||
-    "Sin nombre";
+const nombre = `${apellidos}, ${nombres}`.trim().replace(/,\s*$/, "");
+            
 
             let totalUno = 0;
             let totalD = 0;
