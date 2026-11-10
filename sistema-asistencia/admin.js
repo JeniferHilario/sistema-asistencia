@@ -1415,7 +1415,7 @@ async function consultarReporte() {
         mostrarReporte(
             resultado
         );
-
+        await mostrarTareoMensual(resultado);
 
         mostrarMensajeReporte(
             `Reporte generado correctamente. Registros encontrados: ${resultado.length}`,
@@ -1450,6 +1450,185 @@ async function consultarReporte() {
             "No se pudo generar el reporte.",
             "red"
         );
+    }
+}
+
+// =========================================
+// TAREO MENSUAL
+// =========================================
+
+async function mostrarTareoMensual(registros) {
+
+    const encabezado = document.getElementById("encabezadoTareo");
+    const cuerpo = document.getElementById("listaTareo");
+
+    const desde = document.getElementById("fechaReporteDesde").value;
+    const hasta = document.getElementById("fechaReporteHasta").value;
+
+    if (!desde || !hasta) {
+        cuerpo.innerHTML = `
+            <tr>
+                <td colspan="40">Selecciona las fechas del reporte.</td>
+            </tr>`;
+        return;
+    }
+
+    if (desde > hasta) {
+        cuerpo.innerHTML = `
+            <tr>
+                <td colspan="40">La fecha inicial no puede ser mayor que la fecha final.</td>
+            </tr>`;
+        return;
+    }
+
+    // Obtener la lista de trabajadores
+    const { data: trabajadores, error } =
+        await supabase.rpc("listar_todos_trabajadores");
+
+    if (error) {
+        console.error("Error al cargar trabajadores:", error);
+        cuerpo.innerHTML = `
+            <tr>
+                <td colspan="40">No se pudo cargar la lista de trabajadores.</td>
+            </tr>`;
+        return;
+    }
+
+    // Generar los días del periodo seleccionado
+    const dias = [];
+    let fechaActual = new Date(`${desde}T00:00:00`);
+    const fechaFinal = new Date(`${hasta}T00:00:00`);
+
+    while (fechaActual <= fechaFinal) {
+        dias.push(new Date(fechaActual));
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+
+    // Convertir fecha a formato YYYY-MM-DD
+    function fechaTexto(fecha) {
+        const anio = fecha.getFullYear();
+        const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+        const dia = String(fecha.getDate()).padStart(2, "0");
+        return `${anio}-${mes}-${dia}`;
+    }
+
+    // Proteger los nombres al mostrarlos en la tabla
+    function escaparHTML(valor) {
+        return String(valor ?? "").replace(/[&<>"']/g, caracter => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[caracter]);
+    }
+
+    // Crear encabezados
+    encabezado.innerHTML = `
+        <tr>
+            <th>Trabajador</th>
+            <th>DNI</th>
+            ${dias.map(dia => `
+                <th>${dia.getDate()}</th>
+            `).join("")}
+            <th>Total 1</th>
+            <th>Total D</th>
+            <th>Total F</th>
+        </tr>
+    `;
+
+    // Crear un registro por trabajador y día
+    const asistencias = {};
+
+    (registros || []).forEach(registro => {
+
+        const dni = String(registro.dni || "").trim();
+
+        const fecha = String(
+            registro.fecha ||
+            registro.fecha_asistencia ||
+            ""
+        ).substring(0, 10);
+
+        if (!dni || !fecha) return;
+
+        let estado = String(registro.estado || "").trim().toUpperCase();
+
+        // Si tiene hora de entrada y no tiene estado, se considera asistencia
+        if (!estado && (registro.hora_entrada || registro.entrada)) {
+            estado = "1";
+        }
+
+        // Homologar los estados conocidos
+        if (
+            estado === "ASISTENCIA" ||
+            estado === "ASISTIÓ" ||
+            estado === "ASISTIO" ||
+            estado === "PRESENTE"
+        ) {
+            estado = "1";
+        }
+
+        if (estado === "DESCANSO") estado = "D";
+        if (estado === "INASISTENCIA") estado = "F";
+
+        if (!asistencias[dni]) {
+            asistencias[dni] = {};
+        }
+
+        asistencias[dni][fecha] = estado;
+    });
+
+    // Mostrar trabajadores y sus marcas
+    cuerpo.innerHTML = (trabajadores || [])
+        .filter(trabajador => trabajador.activo !== false)
+        .map(trabajador => {
+
+            const dni = String(trabajador.dni || "").trim();
+
+            const nombre = [
+                trabajador.apellidos,
+                trabajador.nombre
+            ].filter(Boolean).join(", ") ||
+              trabajador.nombre_completo ||
+              trabajador.nombre ||
+              "Sin nombre";
+
+            let totalUno = 0;
+            let totalD = 0;
+            let totalF = 0;
+
+            const celdas = dias.map(dia => {
+
+                const fecha = fechaTexto(dia);
+                const estado = asistencias[dni]?.[fecha] || "";
+
+                if (estado === "1") totalUno++;
+                if (estado === "D") totalD++;
+                if (estado === "F") totalF++;
+
+                return `<td style="text-align:center;">${escaparHTML(estado)}</td>`;
+            }).join("");
+
+            return `
+                <tr>
+                    <td>${escaparHTML(nombre)}</td>
+                    <td>${escaparHTML(dni)}</td>
+                    ${celdas}
+                    <td style="text-align:center;"><strong>${totalUno}</strong></td>
+                    <td style="text-align:center;">${totalD}</td>
+                    <td style="text-align:center;">${totalF}</td>
+                </tr>
+            `;
+        }).join("");
+
+    if (!trabajadores || trabajadores.length === 0) {
+        cuerpo.innerHTML = `
+            <tr>
+                <td colspan="${dias.length + 5}">
+                    No se encontraron trabajadores.
+                </td>
+            </tr>`;
     }
 }
 
